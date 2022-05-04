@@ -1,0 +1,22 @@
+closed set:
+train from scratch: 
+python main.py --dataset cifar10 --model_type resnet18 --optimizer adam --num_epoch 10
+load pre-trained model: 
+python main.py --dataset cifar10 --model_type resnet18 --optimizer adam --load_model checkpoints/resnet18_cifar10.pt
+python main.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/resnet18_cifar10_128_128_sgd_lr002_50e.pt
+
+
+regular open set:
+python main_partitioned.py --dataset cifar10 --model_type resnet18 --optimizer sgd --num_epoch 30
+python main_partitioned.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/open_resnet18_cifar10_60e.pt
+
+
+openmax_edit:
+python openmax_main_part.py --dataset cifar10 --model_type resnet18 --optimizer sgd --num_epoch 40 
+python openmax_main_part.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/open_resnet18_cifar10_60e.pt
+
+
+Adversarial training:
+python main_adversarial.py --dataset cifar10 --model_type resnet18 --optimizer sgd --num_epoch 40 --steps 30
+Adversarial inference:
+python main_adversarial.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model resnet18_cifar10_adv_steps_10.pt
