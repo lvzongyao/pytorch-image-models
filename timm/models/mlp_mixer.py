@@ -46,7 +46,7 @@ import torch
 import torch.nn as nn
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from .helpers import build_model_with_cfg, overlay_external_default_cfg, named_apply
+from .helpers import build_model_with_cfg, named_apply, checkpoint_seq
 from .layers import PatchEmbed, Mlp, GluMlp, GatedMlp, DropPath, lecun_normal_, to_2tuple
 from .registry import register_model
 
@@ -126,6 +126,13 @@ default_cfgs = dict(
 
     resmlp_big_24_224_in22ft1k=_cfg(
         url='https://dl.fbaipublicfiles.com/deit/resmlpB_24_22k.pth',
+        mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
+
+    resmlp_12_224_dino=_cfg(
+        url='https://dl.fbaipublicfiles.com/deit/resmlp_12_dino.pth',
+        mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
+    resmlp_24_224_dino=_cfg(
+        url='https://dl.fbaipublicfiles.com/deit/resmlp_24_dino.pth',
         mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
 
     gmlp_ti16_224=_cfg(),
@@ -253,10 +260,13 @@ class MlpMixer(nn.Module):
             drop_path_rate=0.,
             nlhb=False,
             stem_norm=False,
+            global_pool='avg',
     ):
         super().__init__()
         self.num_classes = num_classes
+        self.global_pool = global_pool
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
+        self.grad_checkpointing = False
 
         self.stem = PatchEmbed(
             img_size=img_size, patch_size=patch_size, in_chans=in_chans,
@@ -272,26 +282,46 @@ class MlpMixer(nn.Module):
 
         self.init_weights(nlhb=nlhb)
 
+    @torch.jit.ignore
     def init_weights(self, nlhb=False):
         head_bias = -math.log(self.num_classes) if nlhb else 0.
         named_apply(partial(_init_weights, head_bias=head_bias), module=self)  # depth-first
 
+    @torch.jit.ignore
+    def group_matcher(self, coarse=False):
+        return dict(
+            stem=r'^stem',  # stem and embed
+            blocks=[(r'^blocks\.(\d+)', None), (r'^norm', (99999,))]
+        )
+
+    @torch.jit.ignore
+    def set_grad_checkpointing(self, enable=True):
+        self.grad_checkpointing = enable
+
+    @torch.jit.ignore
     def get_classifier(self):
         return self.head
 
-    def reset_classifier(self, num_classes, global_pool=''):
+    def reset_classifier(self, num_classes, global_pool=None):
         self.num_classes = num_classes
+        if global_pool is not None:
+            assert global_pool in ('', 'avg')
+            self.global_pool = global_pool
         self.head = nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
     def forward_features(self, x):
         x = self.stem(x)
-        x = self.blocks(x)
+        if self.grad_checkpointing and not torch.jit.is_scripting():
+            x = checkpoint_seq(self.blocks, x)
+        else:
+            x = self.blocks(x)
         x = self.norm(x)
-        x = x.mean(dim=1)
         return x
 
     def forward(self, x):
         x = self.forward_features(x)
+        if self.global_pool == 'avg':
+            x = x.mean(dim=1)
         x = self.head(x)
         return x
 
@@ -353,7 +383,6 @@ def _create_mixer(variant, pretrained=False, **kwargs):
 
     model = build_model_with_cfg(
         MlpMixer, variant, pretrained,
-        default_cfg=default_cfgs[variant],
         pretrained_filter_fn=checkpoint_filter_fn,
         **kwargs)
     return model
@@ -586,6 +615,33 @@ def resmlp_big_24_224_in22ft1k(pretrained=False, **kwargs):
         patch_size=8, num_blocks=24, embed_dim=768, mlp_ratio=4,
         block_layer=partial(ResBlock, init_values=1e-6), norm_layer=Affine, **kwargs)
     model = _create_mixer('resmlp_big_24_224_in22ft1k', pretrained=pretrained, **model_args)
+    return model
+
+
+@register_model
+def resmlp_12_224_dino(pretrained=False, **kwargs):
+    """ ResMLP-12
+    Paper: `ResMLP: Feedforward networks for image classification...` - https://arxiv.org/abs/2105.03404
+
+    Model pretrained via DINO (self-supervised) - https://arxiv.org/abs/2104.14294
+    """
+    model_args = dict(
+        patch_size=16, num_blocks=12, embed_dim=384, mlp_ratio=4, block_layer=ResBlock, norm_layer=Affine, **kwargs)
+    model = _create_mixer('resmlp_12_224_dino', pretrained=pretrained, **model_args)
+    return model
+
+
+@register_model
+def resmlp_24_224_dino(pretrained=False, **kwargs):
+    """ ResMLP-24
+    Paper: `ResMLP: Feedforward networks for image classification...` - https://arxiv.org/abs/2105.03404
+
+    Model pretrained via DINO (self-supervised) - https://arxiv.org/abs/2104.14294
+    """
+    model_args = dict(
+        patch_size=16, num_blocks=24, embed_dim=384, mlp_ratio=4,
+        block_layer=partial(ResBlock, init_values=1e-5), norm_layer=Affine, **kwargs)
+    model = _create_mixer('resmlp_24_224_dino', pretrained=pretrained, **model_args)
     return model
 
 

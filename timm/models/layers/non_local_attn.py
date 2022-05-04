@@ -8,8 +8,9 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .conv_bn_act import ConvBnAct
+from .conv_bn_act import ConvNormAct
 from .helpers import make_divisible
+from .trace_utils import _assert
 
 
 class NonLocalAttn(nn.Module):
@@ -73,17 +74,17 @@ class BilinearAttnTransform(nn.Module):
     def __init__(self, in_channels, block_size, groups, act_layer=nn.ReLU, norm_layer=nn.BatchNorm2d):
         super(BilinearAttnTransform, self).__init__()
 
-        self.conv1 = ConvBnAct(in_channels, groups, 1, act_layer=act_layer, norm_layer=norm_layer)
+        self.conv1 = ConvNormAct(in_channels, groups, 1, act_layer=act_layer, norm_layer=norm_layer)
         self.conv_p = nn.Conv2d(groups, block_size * block_size * groups, kernel_size=(block_size, 1))
         self.conv_q = nn.Conv2d(groups, block_size * block_size * groups, kernel_size=(1, block_size))
-        self.conv2 = ConvBnAct(in_channels, in_channels, 1, act_layer=act_layer, norm_layer=norm_layer)
+        self.conv2 = ConvNormAct(in_channels, in_channels, 1, act_layer=act_layer, norm_layer=norm_layer)
         self.block_size = block_size
         self.groups = groups
         self.in_channels = in_channels
 
     def resize_mat(self, x, t: int):
         B, C, block_size, block_size1 = x.shape
-        assert block_size == block_size1
+        _assert(block_size == block_size1, '')
         if t <= 1:
             return x
         x = x.view(B * C, -1, 1, 1)
@@ -95,7 +96,8 @@ class BilinearAttnTransform(nn.Module):
         return x
 
     def forward(self, x):
-        assert x.shape[-1] % self.block_size == 0 and x.shape[-2] % self.block_size == 0
+        _assert(x.shape[-1] % self.block_size == 0, '')
+        _assert(x.shape[-2] % self.block_size == 0, '')
         B, C, H, W = x.shape
         out = self.conv1(x)
         rp = F.adaptive_max_pool2d(out, (self.block_size, 1))
@@ -130,9 +132,9 @@ class BatNonLocalAttn(nn.Module):
         super().__init__()
         if rd_channels is None:
             rd_channels = make_divisible(in_channels * rd_ratio, divisor=rd_divisor)
-        self.conv1 = ConvBnAct(in_channels, rd_channels, 1, act_layer=act_layer, norm_layer=norm_layer)
+        self.conv1 = ConvNormAct(in_channels, rd_channels, 1, act_layer=act_layer, norm_layer=norm_layer)
         self.ba = BilinearAttnTransform(rd_channels, block_size, groups, act_layer=act_layer, norm_layer=norm_layer)
-        self.conv2 = ConvBnAct(rd_channels, in_channels, 1,  act_layer=act_layer, norm_layer=norm_layer)
+        self.conv2 = ConvNormAct(rd_channels, in_channels, 1, act_layer=act_layer, norm_layer=norm_layer)
         self.dropout = nn.Dropout2d(p=drop_rate)
 
     def forward(self, x):

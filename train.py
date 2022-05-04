@@ -70,7 +70,7 @@ parser.add_argument('-c', '--config', default='', type=str, metavar='FILE',
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 
-# Dataset / Model parameters
+# Dataset parameters
 parser.add_argument('data_dir', metavar='DIR',
                     help='path to dataset')
 parser.add_argument('--dataset', '-d', metavar='NAME', default='',
@@ -79,6 +79,12 @@ parser.add_argument('--train-split', metavar='NAME', default='train',
                     help='dataset train split (default: train)')
 parser.add_argument('--val-split', metavar='NAME', default='validation',
                     help='dataset validation split (default: validation)')
+parser.add_argument('--dataset-download', action='store_true', default=False,
+                    help='Allow download of dataset for torch/ and tfds/ datasets that support it.')
+parser.add_argument('--class-map', default='', type=str, metavar='FILENAME',
+                    help='path to class to idx mapping file (default: "")')
+
+# Model parameters
 parser.add_argument('--model', default='resnet50', type=str, metavar='MODEL',
                     help='Name of model to train (default: "resnet50"')
 parser.add_argument('--pretrained', action='store_true', default=False,
@@ -102,13 +108,21 @@ parser.add_argument('--crop-pct', default=None, type=float,
 parser.add_argument('--mean', type=float, nargs='+', default=None, metavar='MEAN',
                     help='Override mean pixel value of dataset')
 parser.add_argument('--std', type=float, nargs='+', default=None, metavar='STD',
-                    help='Override std deviation of of dataset')
+                    help='Override std deviation of dataset')
 parser.add_argument('--interpolation', default='', type=str, metavar='NAME',
                     help='Image resize interpolation type (overrides model)')
 parser.add_argument('-b', '--batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for training (default: 128)')
+                    help='Input batch size for training (default: 128)')
 parser.add_argument('-vb', '--validation-batch-size', type=int, default=None, metavar='N',
-                    help='validation batch size override (default: None)')
+                    help='Validation batch size override (default: None)')
+parser.add_argument('--channels-last', action='store_true', default=False,
+                    help='Use channels_last memory layout')
+parser.add_argument('--torchscript', dest='torchscript', action='store_true',
+                    help='torch.jit.script the full model')
+parser.add_argument('--fuser', default='', type=str,
+                    help="Select jit fuser. One of ('', 'te', 'old', 'nvfuser')")
+parser.add_argument('--grad-checkpointing', action='store_true', default=False,
+                    help='Enable gradient checkpointing through model blocks/stages')
 
 # Optimizer parameters
 parser.add_argument('--opt', default='sgd', type=str, metavar='OPTIMIZER',
@@ -125,7 +139,8 @@ parser.add_argument('--clip-grad', type=float, default=None, metavar='NORM',
                     help='Clip gradient norm (default: None, no clipping)')
 parser.add_argument('--clip-mode', type=str, default='norm',
                     help='Gradient clipping mode. One of ("norm", "value", "agc")')
-
+parser.add_argument('--layer-decay', type=float, default=None,
+                    help='layer-wise learning rate decay (default: None)')
 
 # Learning rate schedule parameters
 parser.add_argument('--sched', default='cosine', type=str, metavar='SCHEDULER',
@@ -182,7 +197,7 @@ parser.add_argument('--color-jitter', type=float, default=0.4, metavar='PCT',
                     help='Color jitter factor (default: 0.4)')
 parser.add_argument('--aa', type=str, default=None, metavar='NAME',
                     help='Use AutoAugment policy. "v0" or "original". (default: None)'),
-parser.add_argument('--aug-repeats', type=int, default=0,
+parser.add_argument('--aug-repeats', type=float, default=0,
                     help='Number of augmentation repetitions (distributed training only) (default: 0)')
 parser.add_argument('--aug-splits', type=int, default=0,
                     help='Number of augmentation splits (default: 0, valid: 0 or >=2)')
@@ -228,8 +243,6 @@ parser.add_argument('--drop-block', type=float, default=None, metavar='PCT',
                     help='Drop block rate (default: None)')
 
 # Batch norm parameters (only works with gen_efficientnet based models currently)
-parser.add_argument('--bn-tf', action='store_true', default=False,
-                    help='Use Tensorflow BatchNorm defaults for models that support it (default: False)')
 parser.add_argument('--bn-momentum', type=float, default=None,
                     help='BatchNorm momentum override (if not None)')
 parser.add_argument('--bn-eps', type=float, default=None,
@@ -272,8 +285,6 @@ parser.add_argument('--native-amp', action='store_true', default=False,
                     help='Use Native Torch AMP mixed precision')
 parser.add_argument('--no-ddp-bb', action='store_true', default=False,
                     help='Force broadcast buffers for native DDP to off.')
-parser.add_argument('--channels-last', action='store_true', default=False,
-                    help='Use channels_last memory layout')
 parser.add_argument('--pin-mem', action='store_true', default=False,
                     help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
 parser.add_argument('--no-prefetcher', action='store_true', default=False,
@@ -289,8 +300,6 @@ parser.add_argument('--tta', type=int, default=0, metavar='N',
 parser.add_argument("--local_rank", default=0, type=int)
 parser.add_argument('--use-multi-epochs-loader', action='store_true', default=False,
                     help='use the multi-epochs-loader to save time at the beginning of every epoch')
-parser.add_argument('--torchscript', dest='torchscript', action='store_true',
-                    help='convert model torchscript for inference')
 parser.add_argument('--log-wandb', action='store_true', default=False,
                     help='log training and validation metrics to wandb')
 
@@ -360,6 +369,9 @@ def main():
 
     random_seed(args.seed, args.rank)
 
+    if args.fuser:
+        set_jit_fuser(args.fuser)
+
     model = create_model(
         args.model,
         pretrained=args.pretrained,
@@ -369,7 +381,6 @@ def main():
         drop_path_rate=args.drop_path,
         drop_block_rate=args.drop_block,
         global_pool=args.gp,
-        bn_tf=args.bn_tf,
         bn_momentum=args.bn_momentum,
         bn_eps=args.bn_eps,
         scriptable=args.torchscript,
@@ -377,6 +388,9 @@ def main():
     if args.num_classes is None:
         assert hasattr(model, 'num_classes'), 'Model must have `num_classes` attr if not set on cmd line/config.'
         args.num_classes = model.num_classes  # FIXME handle model default vs config num_classes more elegantly
+
+    if args.grad_checkpointing:
+        model.set_grad_checkpointing(enable=True)
 
     if args.local_rank == 0:
         _logger.info(
@@ -437,6 +451,7 @@ def main():
         if args.local_rank == 0:
             _logger.info('AMP not enabled. Training in float32.')
 
+
     # optionally resume from a checkpoint
     resume_epoch = None
     if args.resume:
@@ -449,7 +464,7 @@ def main():
     # setup exponential moving average of model weights, SWA could be used here too
     model_ema = None
     if args.model_ema:
-        # Important to create EMA model after cuda(), DP wrapper, and AMP but before SyncBN and DDP wrapper
+        # Important to create EMA model after cuda(), DP wrapper, and AMP but before DDP wrapper
         model_ema = ModelEmaV2(
             model, decay=args.model_ema_decay, device='cpu' if args.model_ema_force_cpu else None)
         if args.resume:
@@ -484,11 +499,16 @@ def main():
 
     # create the train and eval datasets
     dataset_train = create_dataset(
-        args.dataset,
-        root=args.data_dir, split=args.train_split, is_training=True,
-        batch_size=args.batch_size, repeats=args.epoch_repeats)
+        args.dataset, root=args.data_dir, split=args.train_split, is_training=True,
+        class_map=args.class_map,
+        download=args.dataset_download,
+        batch_size=args.batch_size,
+        repeats=args.epoch_repeats)
     dataset_eval = create_dataset(
-        args.dataset, root=args.data_dir, split=args.val_split, is_training=False, batch_size=args.batch_size)
+        args.dataset, root=args.data_dir, split=args.val_split, is_training=False,
+        class_map=args.class_map,
+        download=args.dataset_download,
+        batch_size=args.batch_size)
 
     # setup mixup / cutmix
     collate_fn = None

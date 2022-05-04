@@ -12,6 +12,8 @@ Paper link: https://arxiv.org/abs/2103.14899
 Original code: https://github.com/IBM/CrossViT/blob/main/models/crossvit.py
 
 NOTE: model names have been renamed from originals to represent actual input res all *_224 -> *_240 and *_384 -> *_408
+
+Modifications and additions for timm hacked together by / Copyright 2021, Ross Wightman
 """
 
 # Copyright IBM All Rights Reserved.
@@ -22,6 +24,7 @@ NOTE: model names have been renamed from originals to represent actual input res
 Modifed from Timm. https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
 
 """
+from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -31,8 +34,9 @@ from functools import partial
 from typing import List
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from .fx_features import register_notrace_function
 from .helpers import build_model_with_cfg
-from .layers import DropPath, to_2tuple, trunc_normal_
+from .layers import DropPath, to_2tuple, trunc_normal_, _assert
 from .registry import register_model
 from .vision_transformer import Mlp, Block
 
@@ -116,8 +120,10 @@ class PatchEmbed(nn.Module):
     def forward(self, x):
         B, C, H, W = x.shape
         # FIXME look at relaxing size constraints
-        assert H == self.img_size[0] and W == self.img_size[1], \
-            f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
+        _assert(H == self.img_size[0],
+                f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]}).")
+        _assert(W == self.img_size[1],
+                f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]}).")
         x = self.proj(x).flatten(2).transpose(1, 2)
         return x
 
@@ -158,8 +164,9 @@ class CrossAttention(nn.Module):
 
 class CrossAttentionBlock(nn.Module):
 
-    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
-                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+    def __init__(
+            self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
+            drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.attn = CrossAttention(
@@ -169,7 +176,6 @@ class CrossAttentionBlock(nn.Module):
 
     def forward(self, x):
         x = x[:, 0:1, ...] + self.drop_path(self.attn(self.norm1(x)))
-
         return x
 
 
@@ -255,6 +261,27 @@ def _compute_num_patches(img_size, patches):
     return [i[0] // p * i[1] // p for i, p in zip(img_size, patches)]
 
 
+@register_notrace_function
+def scale_image(x, ss: Tuple[int, int], crop_scale: bool = False):  # annotations for torchscript
+    """
+    Pulled out of CrossViT.forward_features to bury conditional logic in a leaf node for FX tracing.
+    Args:
+        x (Tensor): input image
+        ss (tuple[int, int]): height and width to scale to
+        crop_scale (bool): whether to crop instead of interpolate to achieve the desired scale. Defaults to False
+    Returns:
+        Tensor: the "scaled" image batch tensor
+    """
+    H, W = x.shape[-2:]
+    if H != ss[0] or W != ss[1]:
+        if crop_scale and ss[0] <= H and ss[1] <= W:
+            cu, cl = int(round((H - ss[0]) / 2.)), int(round((W - ss[1]) / 2.))
+            x = x[:, :, cu:cu + ss[0], cl:cl + ss[1]]
+        else:
+            x = torch.nn.functional.interpolate(x, size=ss, mode='bicubic', align_corners=False)
+    return x
+
+
 class CrossViT(nn.Module):
     """ Vision Transformer with support for patch or hybrid CNN input stage
     """
@@ -262,12 +289,14 @@ class CrossViT(nn.Module):
     def __init__(
             self, img_size=224, img_scale=(1.0, 1.0), patch_size=(8, 16), in_chans=3, num_classes=1000,
             embed_dim=(192, 384), depth=((1, 3, 1), (1, 3, 1), (1, 3, 1)), num_heads=(6, 12), mlp_ratio=(2., 2., 4.),
-            qkv_bias=True, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.,
-            norm_layer=partial(nn.LayerNorm, eps=1e-6), multi_conv=False, crop_scale=False,
+            multi_conv=False, crop_scale=False, qkv_bias=True, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6), global_pool='token',
     ):
         super().__init__()
+        assert global_pool in ('token', 'avg')
 
         self.num_classes = num_classes
+        self.global_pool = global_pool
         self.img_size = to_2tuple(img_size)
         img_scale = to_2tuple(img_scale)
         self.img_size_scaled = [tuple([int(sj * si) for sj in self.img_size]) for si in img_scale]
@@ -275,7 +304,7 @@ class CrossViT(nn.Module):
         num_patches = _compute_num_patches(self.img_size_scaled, patch_size)
         self.num_branches = len(patch_size)
         self.embed_dim = embed_dim
-        self.num_features = embed_dim[0]  # to pass the tests
+        self.num_features = sum(embed_dim)
         self.patch_embed = nn.ModuleList()
 
         # hard-coded for torch jit script
@@ -332,27 +361,37 @@ class CrossViT(nn.Module):
                 out.add(f'pos_embed_{i}')
         return out
 
+    @torch.jit.ignore
+    def group_matcher(self, coarse=False):
+        return dict(
+            stem=r'^cls_token|pos_embed|patch_embed',  # stem and embed
+            blocks=[(r'^blocks\.(\d+)', None), (r'^norm', (99999,))]
+        )
+
+    @torch.jit.ignore
+    def set_grad_checkpointing(self, enable=True):
+        assert not enable, 'gradient checkpointing not supported'
+
+    @torch.jit.ignore
     def get_classifier(self):
         return self.head
 
-    def reset_classifier(self, num_classes, global_pool=''):
+    def reset_classifier(self, num_classes, global_pool=None):
         self.num_classes = num_classes
+        if global_pool is not None:
+            assert global_pool in ('token', 'avg')
+            self.global_pool = global_pool
         self.head = nn.ModuleList(
             [nn.Linear(self.embed_dim[i], num_classes) if num_classes > 0 else nn.Identity() for i in
              range(self.num_branches)])
 
-    def forward_features(self, x):
-        B, C, H, W = x.shape
+    def forward_features(self, x) -> List[torch.Tensor]:
+        B = x.shape[0]
         xs = []
         for i, patch_embed in enumerate(self.patch_embed):
             x_ = x
             ss = self.img_size_scaled[i]
-            if H != ss[0] or W != ss[1]:
-                if self.crop_scale and ss[0] <= H and ss[1] <= W:
-                    cu, cl = int(round((H - ss[0]) / 2.)), int(round((W - ss[1]) / 2.))
-                    x_ = x_[:, :, cu:cu + ss[0], cl:cl + ss[1]]
-                else:
-                    x_ = torch.nn.functional.interpolate(x_, size=ss, mode='bicubic', align_corners=False)
+            x_ = scale_image(x_, ss, self.crop_scale)
             x_ = patch_embed(x_)
             cls_tokens = self.cls_token_0 if i == 0 else self.cls_token_1  # hard-coded for torch jit script
             cls_tokens = cls_tokens.expand(B, -1, -1)
@@ -367,14 +406,18 @@ class CrossViT(nn.Module):
 
         # NOTE: was before branch token section, move to here to assure all branch token are before layer norm
         xs = [norm(xs[i]) for i, norm in enumerate(self.norm)]
-        return [xo[:, 0] for xo in xs]
+        return xs
+
+    def forward_head(self, xs: List[torch.Tensor], pre_logits: bool = False) -> torch.Tensor:
+        xs = [x[:, 1:].mean(dim=1) for x in xs] if self.global_pool == 'avg' else [x[:, 0] for x in xs]
+        if pre_logits or isinstance(self.head[0], nn.Identity):
+            return torch.cat([x for x in xs], dim=1)
+        return torch.mean(torch.stack([head(xs[i]) for i, head in enumerate(self.head)], dim=0), dim=0)
 
     def forward(self, x):
         xs = self.forward_features(x)
-        ce_logits = [head(xs[i]) for i, head in enumerate(self.head)]
-        if not isinstance(self.head[0], nn.Identity):
-            ce_logits = torch.mean(torch.stack(ce_logits, dim=0), dim=0)
-        return ce_logits
+        x = self.forward_head(xs)
+        return x
 
 
 def _create_crossvit(variant, pretrained=False, **kwargs):
@@ -393,7 +436,6 @@ def _create_crossvit(variant, pretrained=False, **kwargs):
 
     return build_model_with_cfg(
         CrossViT, variant, pretrained,
-        default_cfg=default_cfgs[variant],
         pretrained_filter_fn=pretrained_filter_fn,
         **kwargs)
 
