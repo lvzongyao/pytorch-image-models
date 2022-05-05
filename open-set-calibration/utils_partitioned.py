@@ -6,13 +6,13 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 
 from calibrate import *
-from models import resnet110
+# from models import resnet110
 
 from pdb import set_trace as trace
 
-from timm.models import res
-from resnet import *
-import resnet1
+# from timm.models import
+# from resnet import *
+# import resnet1
 from map_labels import *
 
 train_excluded_labels = list(range(6, 10))  # [6,7,8,9]

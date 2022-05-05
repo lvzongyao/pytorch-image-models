@@ -29,7 +29,7 @@ import logging
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
-from train_utils import *
+
 import torch
 import torch.nn as nn
 import torchvision.utils
@@ -43,16 +43,19 @@ from timm.loss import *
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
-import numpy as np
-###############################################################################
-### added imports
-###############################################################################
 
+###############################################################################
+# added imports
+
+import numpy as np
+from train_utils import *
 from calibrate import *
 from scipy.special import softmax
 from map_labels import *
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data.transforms_factory import create_transform
+
+###############################################################################
 
 try:
     from apex import amp
@@ -323,6 +326,24 @@ parser.add_argument('--log-wandb', action='store_true', default=False,
                     help='log training and validation metrics to wandb')
 
 
+def _parse_args():
+    # Do we have a config file to parse?
+    args_config, remaining = config_parser.parse_known_args()
+    if args_config.config:
+        with open(args_config.config, 'r') as f:
+            cfg = yaml.safe_load(f)
+            parser.set_defaults(**cfg)
+
+    # The main arg parser parses the rest of the args, the usual
+    # defaults will have been overridden if config file specified.
+    args = parser.parse_args(remaining)
+
+    # Cache the args as a text string to save them in the output dir later
+    args_text = yaml.safe_dump(args.__dict__, default_flow_style=False)
+    return args, args_text
+
+
+### calibration ###
 def get_calibrator(logits, labels, mode):
     """ return calibrator object that generates confidences
 
@@ -344,30 +365,14 @@ def get_calibrator(logits, labels, mode):
         return temperature_scaling(logits, labels)
 
 
-def _parse_args():
-    # Do we have a config file to parse?
-    args_config, remaining = config_parser.parse_known_args()
-    if args_config.config:
-        with open(args_config.config, 'r') as f:
-            cfg = yaml.safe_load(f)
-            parser.set_defaults(**cfg)
-
-    # The main arg parser parses the rest of the args, the usual
-    # defaults will have been overridden if config file specified.
-    args = parser.parse_args(remaining)
-
-    # Cache the args as a text string to save them in the output dir later
-    args_text = yaml.safe_dump(args.__dict__, default_flow_style=False)
-    return args, args_text
-
-
 def main():
     setup_default_logging()
     args, args_text = _parse_args()
 
     if args.log_wandb:
         if has_wandb:
-            wandb.init(project=exp_name, config=args)
+            # wandb.init(project=exp_name, config=args)
+            wandb.init(project=args.experiment, config=args)
         else:
             _logger.warning("You've requested to log metrics to wandb but package not found. "
                             "Metrics not being logged to wandb, try `pip install wandb`")
@@ -536,6 +541,8 @@ def main():
     if args.local_rank == 0:
         _logger.info('Scheduled epochs: {}'.format(num_epochs))
 
+    #########################################################
+    ###################### calibration ######################
     root = os.path.join('E:/Datasets', args.dataset.upper())
     #    transform = transforms.Compose([
     #    # transforms.RandomCrop(32, padding=4),
@@ -547,15 +554,17 @@ def main():
     transform_train = transforms.Compose([
         transforms.Resize(96),
         transforms.ToTensor(),
-        transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
+        # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
     ])
 
     calibration_list = ['histogram_binning',
                         'matrix_scaling',
                         'vector_scaling',
                         'temperature_scaling']
+
     train_excluded_labels = list(range(6, 10))
     test_excluded_labels = list(range(6))
+
     if args.dataset == 'cifar10':
         dataset = torchvision.datasets.CIFAR10
     elif args.dataset == 'cifar100':
@@ -596,15 +605,30 @@ def main():
     )
 
     main_dataset = get_train_dataset(dataset, train_transform, root, args.dataset)
-    labels = np.array(get_labels(main_dataset))
+    # labels = np.array(get_labels(main_dataset))
     train_idxs = get_idxs_without_excluded(get_labels(main_dataset), train_excluded_labels)
     train_modified = torch.utils.data.Subset(main_dataset, train_idxs)
-    dataset_train, dataset_eval = torch.utils.data.random_split(train_modified, [int(0.9 * len(train_idxs)),
-                                                                                 len(train_idxs) - int(
-                                                                                     0.9 * len(train_idxs))])
-    dataset_test = get_test_dataset(dataset, test_transform, root, args.dataset)
-    train, val = torch.utils.data.random_split(train_modified, [int(0.9 * len(train_idxs)),
-                                                                len(train_idxs) - int(0.9 * len(train_idxs))])
+    # train, val = torch.utils.data.random_split(train_modified, [27000, 3000])
+    train_dataset, val_dataset = torch.utils.data.random_split(train_modified, [int(0.9 * len(train_idxs)),
+                                                                                len(train_idxs) - int(
+                                                                                    0.9 * len(train_idxs))])
+    test_dataset = get_test_dataset(dataset, test_transform, root, args.dataset)
+    #########################################################
+
+    # # create the train and eval datasets
+    # dataset_train = create_dataset(
+    #     args.dataset, root=args.data_dir, split=args.train_split, is_training=True,
+    #     class_map=args.class_map,
+    #     download=args.dataset_download,
+    #     batch_size=args.batch_size,
+    #     repeats=args.epoch_repeats)
+    # dataset_eval = create_dataset(
+    #     args.dataset, root=args.data_dir, split=args.val_split, is_training=False,
+    #     class_map=args.class_map,
+    #     download=args.dataset_download,
+    #     batch_size=args.batch_size)
+
+    # setup mixup / cutmix
     collate_fn = None
     mixup_fn = None
     mixup_active = args.mixup > 0 or args.cutmix > 0. or args.cutmix_minmax is not None
@@ -621,14 +645,15 @@ def main():
 
     # wrap dataset in AugMix helper
     if num_aug_splits > 1:
-        dataset_train = AugMixDataset(dataset_train, num_splits=num_aug_splits)
+        train_dataset = AugMixDataset(train_dataset, num_splits=num_aug_splits)
 
     # create data loaders w/ augmentation pipeiine
     train_interpolation = args.train_interpolation
     if args.no_aug or not train_interpolation:
         train_interpolation = data_config['interpolation']
-    loader_train = create_loader(
-        dataset_train,
+
+    train_loader = create_loader(
+        train_dataset,
         input_size=data_config['input_size'],
         batch_size=args.batch_size,
         is_training=True,
@@ -647,18 +672,21 @@ def main():
         num_aug_repeats=args.aug_repeats,
         num_aug_splits=num_aug_splits,
         interpolation=train_interpolation,
-        mean=data_config['mean'] if args.input_size[0] == 3 else np.mean(data_config['mean']),
-        std=data_config['std'] if args.input_size[0] == 3 else np.mean(data_config['std']),
+        # mean=data_config['mean'],
+        # std=data_config['std'],
         num_workers=args.workers,
         distributed=args.distributed,
         collate_fn=collate_fn,
         pin_memory=args.pin_mem,
         use_multi_epochs_loader=args.use_multi_epochs_loader,
         worker_seeding=args.worker_seeding,
+        ###################### calibration ######################
+        mean=data_config['mean'] if args.input_size[0] == 3 else np.mean(data_config['mean']),
+        std=data_config['std'] if args.input_size[0] == 3 else np.mean(data_config['std']),
     )
     #
-    #    loader_train =create_loader(
-    #        dataset_eval,
+    #    train_loader =create_loader(
+    #        val_dataset,
     #        input_size=data_config['input_size'],
     #        batch_size=args.validation_batch_size or args.batch_size,
     #        is_training=False,
@@ -673,8 +701,27 @@ def main():
     #    )
     #
 
-    loader_eval = create_loader(
-        dataset_eval,
+    val_loader = create_loader(
+        val_dataset,
+        input_size=data_config['input_size'],
+        batch_size=args.validation_batch_size or args.batch_size,
+        is_training=False,
+        use_prefetcher=args.prefetcher,
+        interpolation=data_config['interpolation'],
+        # mean=data_config['mean'],
+        # std=data_config['std'],
+        num_workers=args.workers,
+        distributed=args.distributed,
+        crop_pct=data_config['crop_pct'],
+        pin_memory=args.pin_mem,
+        ###################### calibration ######################
+        mean=data_config['mean'] if args.input_size[0] == 3 else np.mean(data_config['mean']),
+        std=data_config['std'] if args.input_size[0] == 3 else np.mean(data_config['std']),
+    )
+
+    test_loader = create_loader(
+        # val_dataset,
+        test_dataset,
         input_size=data_config['input_size'],
         batch_size=args.validation_batch_size or args.batch_size,
         is_training=False,
@@ -687,20 +734,7 @@ def main():
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
     )
-    loader_test = create_loader(
-        dataset_eval,
-        input_size=data_config['input_size'],
-        batch_size=args.validation_batch_size or args.batch_size,
-        is_training=False,
-        use_prefetcher=args.prefetcher,
-        interpolation=data_config['interpolation'],
-        mean=data_config['mean'] if args.input_size[0] == 3 else np.mean(data_config['mean']),
-        std=data_config['std'] if args.input_size[0] == 3 else np.mean(data_config['std']),
-        num_workers=args.workers,
-        distributed=args.distributed,
-        crop_pct=data_config['crop_pct'],
-        pin_memory=args.pin_mem,
-    )
+
     # setup loss function
     if args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
@@ -718,7 +752,9 @@ def main():
             train_loss_fn = LabelSmoothingCrossEntropy(smoothing=args.smoothing)
     else:
         train_loss_fn = nn.CrossEntropyLoss()
+    ###### calibration ######
     train_loss_fn = nn.CrossEntropyLoss()
+
     train_loss_fn = train_loss_fn.cuda()
     validate_loss_fn = nn.CrossEntropyLoss().cuda()
 
@@ -730,9 +766,10 @@ def main():
     output_dir = None
     if args.rank == 0:
         if args.experiment:
-
+            ###### calibration ######
             now = datetime.now()
             dt_string = now.strftime("-%d-%m-%Y%H:%M:%S")
+
             exp_name = args.experiment + dt_string
         else:
             exp_name = '-'.join([
@@ -750,11 +787,11 @@ def main():
 
     try:
         for epoch in range(start_epoch, num_epochs):
-            if args.distributed and hasattr(loader_train.sampler, 'set_epoch'):
-                loader_train.sampler.set_epoch(epoch)
+            if args.distributed and hasattr(train_loader.sampler, 'set_epoch'):
+                train_loader.sampler.set_epoch(epoch)
 
             train_metrics = train_one_epoch(
-                epoch, model, loader_train, optimizer, train_loss_fn, args,
+                epoch, model, train_loader, optimizer, train_loss_fn, args,
                 lr_scheduler=lr_scheduler, saver=saver, output_dir=output_dir,
                 amp_autocast=amp_autocast, loss_scaler=loss_scaler, model_ema=model_ema, mixup_fn=mixup_fn)
 
@@ -763,13 +800,13 @@ def main():
                     _logger.info("Distributing BatchNorm running means and vars")
                 distribute_bn(model, args.world_size, args.dist_bn == 'reduce')
 
-            eval_metrics = validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast)
+            eval_metrics = validate(model, val_loader, validate_loss_fn, args, amp_autocast=amp_autocast)
 
             if model_ema is not None and not args.model_ema_force_cpu:
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                     distribute_bn(model_ema, args.world_size, args.dist_bn == 'reduce')
                 ema_eval_metrics = validate(
-                    model_ema.module, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast,
+                    model_ema.module, val_loader, validate_loss_fn, args, amp_autocast=amp_autocast,
                     log_suffix=' (EMA)')
                 eval_metrics = ema_eval_metrics
 
@@ -789,7 +826,10 @@ def main():
 
     except KeyboardInterrupt:
         pass
-    test_logits, test_labels = test(model, loader_test, device)
+
+    #########################################################
+    ###################### calibration ######################
+    test_logits, test_labels = test(model, test_loader, device)
     test_probs = softmax(test_logits, axis=1)
 
     # evaluate confidence calibration of original model
@@ -801,9 +841,9 @@ def main():
         [args.model, args.dataset, 'best_loss', 'val_acc', 'val_std', 'uncalibrated_brier', 'uncalib_acc', 'test ECE',
          'test_acc', 'test_acc_std', 'test_brier', 'test_brier_std'])
     val_ece = expected_calibration_error(test_probs, test_labels, mode='before')
-    val_logits, val_labels = test(model, loader_eval, device)
+    val_logits, val_labels = test(model, val_loader, device)
     val_probs = softmax(val_logits, axis=1)
-    val_acc_j, val_acc_std = error_resampler(val_probs, val_labels, get_accuracy)
+    # val_acc_j, val_acc_std = error_resampler(val_probs, val_labels, get_accuracy)
     threshold = 0
     for i in range(0, 20):
         print(f"threshold is {threshold} \n\n\n ")
@@ -827,6 +867,43 @@ def main():
 
         threshold += 0.05
     exp_f.close()
+
+    # # evaluate confidence calibration of original model
+    # reliability_diagrams(test_probs, test_labels, mode='before', experiment=exp_name)
+    # exp_data_path = os.path.join(output_dir, 'test_data.csv')
+    # exp_f = open(exp_data_path, 'w')
+    # writer = csv.writer(exp_f)
+    # writer.writerow(
+    #     [args.model, args.dataset, 'best_loss', 'val_acc', 'val_std', 'uncalibrated_brier', 'uncalib_acc', 'test ECE',
+    #      'test_acc', 'test_acc_std', 'test_brier', 'test_brier_std'])
+    # val_ece = expected_calibration_error(test_probs, test_labels, mode='before')
+    # val_logits, val_labels = test(model, val_loader, device)
+    # val_probs = softmax(val_logits, axis=1)
+    # val_acc_j, val_acc_std = error_resampler(val_probs, val_labels, get_accuracy)
+    # threshold = 0
+    # for i in range(0, 20):
+    #     print(f"threshold is {threshold} \n\n\n ")
+    #     thres_brier_score = evaluate_brier(test_probs, test_labels, threshold)
+    #     print('Brier {} without calibration: {}'.format("Uncalibrated", thres_brier_score))
+    #     uncalibrated_osr_thresh_acc = evaluate_open_set(test_probs, test_labels, threshold)
+    #     print('Threshold Accuracy {} without calibration: {}'.format("Uncalibrated", uncalibrated_osr_thresh_acc))
+    #     for cali in calibration_list:
+    #         print("calibrating")
+    #         calibrator = get_calibrator(val_logits, val_labels, mode=cali)
+    #         confidences = calibrator(test_logits)
+    #         reliability_diagrams(confidences, test_labels, mode=cali, experiment=exp_name)
+    #         test_ece = expected_calibration_error(confidences, test_labels, mode=cali, threshold=threshold)
+    #         acc_j, acc_std = error_resampler(confidences, test_labels, get_accuracy)
+    #         print('Accuracy {} calibration: {}'.format(cali, acc_j))
+    #         thres_br, thres_br_std = error_resampler(confidences, test_labels, evaluate_brier, threshold=threshold)
+    #         print('Brier {} calibration: {}'.format(cali, thres_br))
+    #         newrow = [args.model, args.dataset, best_metric, val_acc_j, val_acc_std, thres_brier_score,
+    #                   uncalibrated_osr_thresh_acc, test_ece, acc_j, acc_std, thres_br, thres_br_std]
+    #         writer.writerow(newrow)
+    #
+    #     threshold += 0.05
+    # exp_f.close()
+
     if best_metric is not None:
         _logger.info('*** Best metric: {0} (epoch {1})'.format(best_metric, best_epoch))
 
