@@ -1,0 +1,38 @@
+ResNet/DenseNet:
+###############################################################################
+### OSR experiments
+###############################################################################
+#/distributed_train_p.sh 1 /data/imagenet --model resnet18 --sched cosine --epochs 200 --lr 0.01 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset cifar10 --input-size 3 32 32 --num-classes 6 --workers 2 --experiment cifar_eff_osr
+./distributed_train_p.sh 1 /data/imagenet --model densenet121 --sched cosine --epochs 200 --lr 0.01 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset svhn --input-size 3 32 32 --num-classes 6 --workers 2 --experiment eff_svhn_osr
+./distributed_train_p.sh 1 /data/imagenet --model densenet121 --sched cosine --epochs 200 --lr 0.01 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset mnist --input-size 3 32 32 --num-classes 6 --workers 2 --experiment eff_mnist_osr
+./distributed_train_p.sh 1 /data/imagenet --model densenet121 --sched cosine --epochs 200 --lr 0.01 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset cifar10 --input-size 3 32 32 --num-classes 6 --workers 2 --experiment cifar_eff_osr
+
+
+
+EfficientNet:
+###############################################################################
+### OSR experiments
+###############################################################################
+
+./distributed_train_p.sh 4 /data/imagenet --model efficientnetv2_m --sched cosine --epochs 200 --lr 0.4 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset mnist --input-size 3 32 32 --num-classes 6 --workers 2 --experiment eff_mnist_osr
+./distributed_train_p.sh 4 /data/imagenet --model efficientnetv2_m --sched cosine --epochs 200 --lr 0.4 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset svhn --input-size 3 32 32 --num-classes 6 --workers 2 --experiment eff_svhn_osr
+./distributed_train_p.sh 4 /data/imagenet --model efficientnetv2_m --sched cosine --epochs 200 --lr 0.4 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset cifar10 --input-size 3 32 32 --num-classes 6 --workers 2 --experiment cifar_eff_osr
+
+###############################################################################
+### adversarial experiments
+###############################################################################
+
+./distributed_train_adv.sh 4 /data/imagenet --model efficientnetv2_m --sched cosine --epochs 200 --lr 0.4 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset cifar10 --input-size 3 32 32 --num-classes 6 --workers 2 --steps 4 --experiment cifar_eff_steps_4
+./distributed_train_adv.sh 4 /data/imagenet --model efficientnetv2_m --sched cosine --epochs 200 --lr 0.4 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset cifar10 --input-size 3 32 32 --num-classes 6 --workers 2 --steps 2 --experiment cifar_eff_steps_2
+./distributed_train_adv.sh 4 /data/imagenet --model efficientnetv2_m --sched cosine --epochs 200 --lr 0.4 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset cifar10 --input-size 3 32 32 --num-classes 6 --workers 2 --steps 10 --experiment cifar_eff_steps_2
+###############################################################################
+### 
+###############################################################################
+
+./distributed_train_openmax.sh 4 /data/imagenet --model efficientnetv2_m --sched cosine --epochs 200 --lr 0.4 --reprob 0.5 --remode pixel --batch-size 128 --amp -j 4 --dataset cifar10 --input-size 3 32 32 --num-classes 6 --workers 2 --experiment cifar_eff_openmax
+
+
+
+
+
+

@@ -2,7 +2,7 @@ import argparse
 import torch
 import torch.optim as optim
 import torchvision
-# import torchvision.models as models
+import torchvision.models as models
 import torchvision.transforms as transforms
 
 from calibrate import *
@@ -10,6 +10,7 @@ from models import resnet110
 
 from pdb import set_trace as trace
 
+from timm.models import res
 from resnet import *
 import resnet1
 from map_labels import *
