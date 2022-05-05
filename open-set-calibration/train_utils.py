@@ -430,7 +430,7 @@ def test(model, dataset, device):
             targets += list(labels.detach().cpu().numpy())
             logits.append(outputs.detach().cpu().numpy())
 
-    print("Accuracy of the network : {} %%".format(100 * correct / total))
+    print("Accuracy of the network : {} %".format(100 * correct / total))
 
     logits = np.concatenate(logits, axis=0)
     return logits, np.array(targets)
