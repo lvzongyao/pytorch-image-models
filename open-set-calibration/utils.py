@@ -25,8 +25,8 @@ def argparser():
 
 # preprocess image dataset
 transform_train = transforms.Compose([
-    # transforms.RandomCrop(32, padding=4),
-    # transforms.RandomHorizontalFlip(),
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
     transforms.Resize(96),
     transforms.ToTensor(),
     # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
@@ -37,6 +37,25 @@ transform_test = transforms.Compose([
     transforms.Resize(96),
     # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
 ])
+
+
+def get_train_dataset(dataset, transform, root, target):
+    # trace()
+    if target == "cifar10" or target == "mnist":
+        return dataset(root=root, train=True, transform=transform, download=False)
+    elif target == 'svhn':
+        return dataset(root=root, split='train', transform=transform, download=False)
+    else:
+        print("dataset doesn't exist")
+
+
+def get_test_dataset(dataset, transform, root, target):
+    if target == "cifar10" or target == "mnist":
+        return dataset(root=root, train=False, transform=transform, download=False)
+    elif target == 'svhn':
+        return dataset(root=root, split='train', transform=transform, download=False)
+    else:
+        print("dataset doesn't exist")
 
 
 # def get_train_loader(target='cifar100', root='./data'):
@@ -57,14 +76,21 @@ def get_train_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
         dataset = torchvision.datasets.CIFAR100
     elif target == 'svhn':
         dataset = torchvision.datasets.SVHN
+    elif target == 'mnist':
+        dataset = torchvision.datasets.MNIST
 
     transform = transform_train
     shuffle = True
     batch_size = 128
     # batch_size = 256
 
-    dataset = dataset(root=root, train=True, transform=transform, download=False)
-    train, val = torch.utils.data.random_split(dataset, [45000, 5000])
+    dataset = get_train_dataset(dataset, transform, root, target)
+    ### cifar10
+    # train, val = torch.utils.data.random_split(dataset, [45000, 5000])
+    ### svhn
+    train, val = torch.utils.data.random_split(dataset, [65931, 7326])
+    # train, val = torch.utils.data.random_split(train_modified, [int(0.9 * len(train_idxs)),
+    #                                                             len(train_idxs) - int(0.9 * len(train_idxs))])
     train_loader = torch.utils.data.DataLoader(train, batch_size=batch_size,
                                                shuffle=shuffle, num_workers=2)
     val_loader = torch.utils.data.DataLoader(val, batch_size=batch_size,
@@ -92,6 +118,8 @@ def get_test_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
         dataset = torchvision.datasets.CIFAR100
     elif target == 'svhn':
         dataset = torchvision.datasets.SVHN
+    elif target == 'mnist':
+        dataset = torchvision.datasets.MNIST
 
     transform = transform_test
     shuffle = False
@@ -100,43 +128,43 @@ def get_test_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
     # batch_size = 256
     # batch_size = 200
 
-    dataset = dataset(root=root, train=False, transform=transform, download=False)
+    dataset = get_test_dataset(dataset, transform, root, target)
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                          shuffle=shuffle, num_workers=2)
     return loader
 
 
-def get_model(name, num_classes):
-    """ return model architecture for image recognition
-
-    Args:
-        name: which model architecture to use
-        num_classes: number of classes for classification
-        pretrained: whether or not to get imagenet pretrained model
-
-    Return:
-        model: neural network object to be used
-    """
-    if name == 'resnet18':
-        model = models.resnet18
-        # model = resnet18
-    elif name == 'resnet34':
-        # model = models.resnet34
-        model = resnet34
-    elif name == 'resnet50':
-        # model = models.resnet50
-        model = resnet50
-    elif name == 'resnet101':
-        # model = models.resnet101
-        model = resnet101
-    elif name == 'resnet110':
-        model = resnet110
-    elif name == 'resnet152':
-        # model = models.resnet152
-        model = resnet152
-
-    # using models.resnetxxx
-    return model(num_classes=num_classes)
+# def get_model(name, num_classes):
+#     """ return model architecture for image recognition
+#
+#     Args:
+#         name: which model architecture to use
+#         num_classes: number of classes for classification
+#         pretrained: whether or not to get imagenet pretrained model
+#
+#     Return:
+#         model: neural network object to be used
+#     """
+#     if name == 'resnet18':
+#         model = models.resnet18
+#         # model = resnet18
+#     elif name == 'resnet34':
+#         # model = models.resnet34
+#         model = resnet34
+#     elif name == 'resnet50':
+#         # model = models.resnet50
+#         model = resnet50
+#     elif name == 'resnet101':
+#         # model = models.resnet101
+#         model = resnet101
+#     elif name == 'resnet110':
+#         model = resnet110
+#     elif name == 'resnet152':
+#         # model = models.resnet152
+#         model = resnet152
+#
+#     # using models.resnetxxx
+#     return model(num_classes=num_classes)
 
     # # using resnet.py
     # return model

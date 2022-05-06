@@ -28,6 +28,13 @@ def main():
         num_classes = 10
     elif args.dataset == 'cifar100':
         num_classes = 100
+    elif args.dataset == 'svhn':
+        num_classes = 10
+        data_name = 'SVHN'
+        num_channels = 3
+    elif args.dataset == 'mnist':
+        num_classes = 10
+
     print('num of classes: ', num_classes)
 
     device = torch.device('cuda:0' if torch.cuda.is_available else 'cpu')
