@@ -68,9 +68,9 @@ def main():
 
     # train the model from scratch or load trained model
     if not args.load_model:
-        model_name = '{}_{}'.format(args.model_type, args.dataset)
-        train(model, tr_dataset, test_dataset, optimizer, args.num_epoch, device, scheduler)
-        torch.save(model.state_dict(), model_name)
+        model_name = '{}_{}_{}'.format('closed_' + args.model_type, args.dataset, str(args.num_epoch) + 'e')
+        train(model, tr_dataset, test_dataset, optimizer, args.num_epoch, device, scheduler, model_name=model_name)
+        # torch.save(model.state_dict(), model_name)
     else:
         model.load_state_dict(torch.load(args.load_model))
 

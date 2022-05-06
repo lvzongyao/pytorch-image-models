@@ -211,7 +211,7 @@ def evaluate_accuracy(data_iter, net, device=None):
     return acc_sum / n
 
 
-def train(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler=None):
+def train(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler=None, model_name=None):
     net = model.to(device)
     print("training on ", device)
     loss = torch.nn.CrossEntropyLoss()
@@ -230,13 +230,14 @@ def train(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler
             train_acc_sum += (y_hat.argmax(dim=1) == y).sum().cpu().item()
             n += y.shape[0]
             batch_count += 1
-        #         print('y.shape:', y.shape)
-        #         print('n:', n)
-        #         print('batch_count: ', batch_count)
-        torch.save(net.state_dict(), './checkpoints/resnet18_cifar10.pt')
+
+        # save and reload model
+        torch.save(net.state_dict(), './checkpoints/' + model_name + '.pt')
         net = model.to(device)
-        net.load_state_dict(torch.load('./checkpoints/resnet18_cifar10.pt'))
+        net.load_state_dict(torch.load('./checkpoints/' + model_name + '.pt'))
+
         test_acc = evaluate_accuracy(test_iter, net)
+
         print('epoch %d, loss %.4f, train acc %.3f, test acc %.3f, time %.1f sec'
               % (epoch + 1, train_l_sum / batch_count, train_acc_sum / n, test_acc, time.time() - start))
 
