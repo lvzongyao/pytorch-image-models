@@ -16,10 +16,10 @@ from pdb import set_trace as trace
 import torchvision
 
 from sklearn.metrics import brier_score_loss
-from openmax_edit.openmax import compute_openmax
+# from openmax_edit.openmax import compute_openmax
 from utils_partitioned import *
 import torchattacks
-from JackKnife import *
+
 
 args = argparser()
 criterion = nn.CrossEntropyLoss()

@@ -15,6 +15,8 @@ from pdb import set_trace as trace
 # import resnet1
 from map_labels import *
 
+
+
 train_excluded_labels = list(range(6, 10))  # [6,7,8,9]
 test_excluded_labels = list(range(6))  # [0,1,2,3,4,5]
 
@@ -34,8 +36,8 @@ def argparser():
 
 # preprocess image dataset
 transform_train = transforms.Compose([
-    # transforms.RandomCrop(32, padding=4),
-    # transforms.RandomHorizontalFlip(),
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
     transforms.Resize(96),
     transforms.ToTensor(),
     #     transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))

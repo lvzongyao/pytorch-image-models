@@ -3,13 +3,12 @@ import os
 import torch
 import numpy as np
 from scipy.special import softmax
-
 from utils_partitioned import *
-# from train_partitioned_403 import *
-# from train_partitioned_410 import *
+
 from train_partitioned import *
 
-from pdb import set_trace as trace
+from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint, \
+    convert_splitbn_model, model_parameters
 
 torch.manual_seed(0)
 
@@ -49,7 +48,24 @@ def main():
         data_name = 'MNIST'
         num_channels = 1
 
-    model = get_model(args.model_type, num_classes=num_classes, num_channels=num_channels)
+    # model = get_model(args.model_type, num_classes=num_classes, num_channels=num_channels)
+    model = create_model(
+        # args.model,
+        args.model_type,
+        num_classes=num_classes,
+        # pretrained=args.pretrained,
+        # num_classes=args.num_classes,
+        # drop_rate=args.drop,
+        # drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
+        # drop_path_rate=args.drop_path,
+        # drop_block_rate=args.drop_block,
+        # global_pool=args.gp,
+        # bn_momentum=args.bn_momentum,
+        # bn_eps=args.bn_eps,
+        # scriptable=args.torchscript,
+        # checkpoint_path=args.initial_checkpoint
+    )
+
     model.to(device)
     optimizer, scheduler = get_optim(args.optimizer, model)
     tr_dataloader, val_dataloader = get_train_loader(args.dataset, data_dir)

@@ -21,9 +21,12 @@ from sklearn.metrics import brier_score_loss
 # from JackKnife import *
 from map_labels import *
 
-criterion = nn.CrossEntropyLoss()
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+train_excluded_labels = list(range(6, 10))  # [6,7,8,9]
+test_excluded_labels = list(range(6))  # [0,1,2,3,4,5]
+
+criterion = nn.CrossEntropyLoss()
 
 transform_resize = transforms.Compose([
     # transforms.RandomCrop(32, padding=4),
@@ -47,6 +50,88 @@ def get_test_dataset(dataset, transform, root, target):
         return dataset(root=root, train=False, transform=transform, download=False)
     else:
         return dataset(root=root, split='test', transform=transform, download=False)
+
+
+def get_train_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
+    """ return dataloader for image dataset
+
+    Args:
+        target: name of the dataset to be loaded
+        root: path to the dataset directory
+        train: whether to use train data
+
+    Return:
+        dataloader: dataset loader object
+    """
+    # set target dataset
+    if target == 'cifar10':
+        dataset = torchvision.datasets.CIFAR10
+    elif target == 'cifar100':
+        dataset = torchvision.datasets.CIFAR100
+    elif target == 'svhn':
+        dataset = torchvision.datasets.SVHN
+    elif target == 'mnist':
+        dataset = torchvision.datasets.MNIST
+
+    # transform = transform_train
+    transform = transform_resize
+    shuffle = True
+    batch_size = 128
+
+    # dataset = dataset(root=root, train=True, transform=transform, download=False)
+    # train_idxs = get_idxs_without_excluded(dataset.targets, train_excluded_labels)
+
+    dataset = get_train_dataset(dataset, transform, root, target)
+    labels = get_labels(dataset)
+    train_idxs = get_idxs_without_excluded(get_labels(dataset), train_excluded_labels)
+    train_modified = torch.utils.data.Subset(dataset, train_idxs)
+
+    # train, val = torch.utils.data.random_split(train_modified, [27000, 3000])
+    train, val = torch.utils.data.random_split(train_modified, [int(0.9 * len(train_idxs)),
+                                                                len(train_idxs) - int(0.9 * len(train_idxs))])
+    train_loader = torch.utils.data.DataLoader(train, batch_size=batch_size,
+                                               shuffle=shuffle, num_workers=2)
+    val_loader = torch.utils.data.DataLoader(val, batch_size=batch_size,
+                                             shuffle=shuffle, num_workers=2)
+
+    return train_loader, val_loader
+
+
+# def get_test_loader(target='cifar100', root='./data'):
+def get_test_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
+    """ return dataloader for image dataset
+
+    Args:
+        target: name of the dataset to be loaded
+        root: path to the dataset directory
+        train: whether to use train data
+
+    Return:
+        dataloader: dataset loader object
+    """
+    # set target dataset
+    if target == 'cifar10':
+        dataset = torchvision.datasets.CIFAR10
+    elif target == 'cifar100':
+        dataset = torchvision.datasets.CIFAR100
+    elif target == 'svhn':
+        dataset = torchvision.datasets.SVHN
+    elif target == 'mnist':
+        dataset = torchvision.datasets.MNIST
+
+    # transform = transform_test
+    transform = transform_resize
+    shuffle = False
+    batch_size = 128
+
+    dataset = get_test_dataset(dataset, transform, root, target)
+
+    #    test_idxs = get_idxs_without_excluded(dataset.targets, train_excluded_labels)
+    #    test_modified = torch.utils.data.Subset(dataset, test_idxs)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                         shuffle=shuffle, num_workers=2)
+
+    return loader
 
 
 def reliability_diagrams(probs, labels, mode, experiment):
@@ -104,34 +189,62 @@ np.mean(np.argmax(probs,axis =1) == nnlabels)
 """
 
 
-def evaluate_open_set(probs, labels, threshold=0.7):
+# def evaluate_open_set(probs, labels, threshold=0.7):
+def evaluate_open_set(probs, labels, threshold=0.7, is_openmax=False):
     """
      
     :returns
     """
+    new_labels = np.array(labels.copy())
+    new_labels[new_labels > 5] = 6
 
-    new_labels = []
-    for y in labels:
-        if y > 5:
-            new_labels.append(-1)
-        else:
-            new_labels.append(y)
-    nnlabels = np.array(new_labels)
-    nnlabels[nnlabels == -1] = 6
-    openmax_acc = np.mean(np.argmax(probs, axis=1) == nnlabels)
+    if is_openmax:
+        openmax_acc = np.mean(np.argmax(probs, axis=1) == new_labels)
+        print('Threshold accuracy {} calibration: {} %'.format("openmax", 100 * openmax_acc))
+        new_probs = probs.copy()
+    if not is_openmax:
+        prods = np.prod(1 - probs, axis=1)
+        new_probs = np.concatenate([probs, np.expand_dims(prods, 1)], axis=1)
 
-    print('Threshold Accuracy {} calibration: {}'.format("openmax", openmax_acc))
-    confidences = probs.max(axis=1)
-    preds = np.argmax(probs, axis=1)
-    new_preds = []
-    for co, pr in zip(confidences, preds):
-        if co < threshold:
-            new_preds.append(-1)
+    # labels_arr = np.zeros((probs.shape[0], probs.shape[1] + 1))
+    # labels_arr[np.arange(new_labels.size), new_labels] = 1
+    # prods = np.prod(1 - probs, axis=1)
+    # new_probs = np.concatenate([probs, np.expand_dims(prods, 1)], axis=1)
+
+    highest_conf = np.max(new_probs, axis=1)
+    predictions = np.argmax(new_probs, axis=1)
+    new_predictions = []
+    for pred, conf in zip(predictions, highest_conf):
+        if conf > threshold:
+            new_predictions.append(pred)
         else:
-            new_preds.append(pr)
-    new_preds = np.array(new_preds)
-    new_labels = np.array(new_labels)
-    return 100 * np.mean(new_preds == new_labels)
+            new_predictions.append(6)
+    open_acc = 100 * np.mean(new_predictions == new_labels)
+
+    return open_acc
+
+    # new_labels = []
+    # for y in labels:
+    #     if y > 5:
+    #         new_labels.append(-1)
+    #     else:
+    #         new_labels.append(y)
+    # nnlabels = np.array(new_labels)
+    # nnlabels[nnlabels == -1] = 6
+    # openmax_acc = np.mean(np.argmax(probs, axis=1) == nnlabels)
+    #
+    # print('Threshold Accuracy {} calibration: {}'.format("openmax", openmax_acc))
+    # confidences = probs.max(axis=1)
+    # preds = np.argmax(probs, axis=1)
+    # new_preds = []
+    # for co, pr in zip(confidences, preds):
+    #     if co < threshold:
+    #         new_preds.append(-1)
+    #     else:
+    #         new_preds.append(pr)
+    # new_preds = np.array(new_preds)
+    # new_labels = np.array(new_labels)
+    # return 100 * np.mean(new_preds == new_labels)
 
 
 def evaluate_brier(probs, labels, threshold):
@@ -184,7 +297,7 @@ def evaluate_brier_other(probs, labels, threshold):
     return manual_brier
 
 
-def expected_calibration_error(probs, labels, mode, threshold=0.5):
+def expected_calibration_error(probs, labels, threshold=0.5):
     """ Calculate expected calibration error from classifier output
 
     Args:
@@ -195,12 +308,29 @@ def expected_calibration_error(probs, labels, mode, threshold=0.5):
     Returns:
         float: overall expected calibration error computed
     """
+    other_labels = labels.copy()
+    other_labels[other_labels > 5] = 6
+    prods = np.prod(1 - probs, axis=1)
+    new_probs = np.concatenate([probs, np.expand_dims(prods, 1)], axis=1)
     num_data = len(labels)
     ece_score = 0
 
-    preds = np.argmax(probs, axis=1)
+    # preds = np.argmax(probs, axis=1)
     # confidences = np.array([probs[i, y] for i, y in enumerate(preds)])
-    confidences = probs.max(axis=1)
+    # confidences = probs.max(axis=1)
+    confidences = []
+
+    max_confs = np.max(new_probs, axis=1)
+    # ones_arr = np.ones(probs.shape[1])
+    predicts = []
+    for pr, mc in zip(new_probs, max_confs):
+        if mc > threshold:
+            confidences.append(mc)
+            predicts.append(np.argmax(pr))
+        else:
+            confidences.append(pr[-1])
+            predicts.append(6)
+
     bins = np.linspace(0, 1, num=15, endpoint=False)
     idxs = np.digitize(confidences, bins) - 1
 
@@ -210,22 +340,58 @@ def expected_calibration_error(probs, labels, mode, threshold=0.5):
         if bin_size == 0:
             continue
         else:
-            bin_acc = np.sum(preds[bin_idx] == labels[bin_idx]) / bin_size
-            bin_conf = np.sum(confidences[bin_idx]) / bin_size
+            bin_acc = np.sum(np.array(predicts)[bin_idx] == other_labels[bin_idx]) / bin_size
+            bin_conf = np.sum(np.array(confidences)[bin_idx]) / bin_size
             ece_score += np.abs(bin_acc - bin_conf) * bin_size
 
     ece_score /= num_data
-    print('ECE {} calibration: {}'.format(mode, ece_score))
 
-    #    acc_j, acc_std = error_resampler(probs, labels, get_accuracy)
-    #    print('Accuracy {} calibration: {}'.format(mode,acc_j))
-    ##    thres_brier_score = evaluate_brier(probs, labels, threshold)
-    #    thres_br, thres_br_std = error_resampler(probs, labels, evaluate_brier, threshold = threshold)
-    #    print('Brier {} calibration: {}'.format(mode,thres_br))
-
-    osr_thresh_acc = evaluate_open_set(probs, labels, threshold)
-    print('Threshold Accuracy {} calibration: {}'.format(mode, osr_thresh_acc))
     return ece_score
+
+
+# old ece function
+# def expected_calibration_error(probs, labels, mode, threshold=0.5):
+#     """ Calculate expected calibration error from classifier output
+#
+#     Args:
+#         probs: output probability estimation (confidences) from classifier
+#         labels: correct label list (list of integers)
+#         mode: calibration method that generated input confidences
+#
+#     Returns:
+#         float: overall expected calibration error computed
+#     """
+#     num_data = len(labels)
+#     ece_score = 0
+#
+#     preds = np.argmax(probs, axis=1)
+#     # confidences = np.array([probs[i, y] for i, y in enumerate(preds)])
+#     confidences = probs.max(axis=1)
+#     bins = np.linspace(0, 1, num=15, endpoint=False)
+#     idxs = np.digitize(confidences, bins) - 1
+#
+#     for i in range(len(bins)):
+#         bin_idx = (idxs == i)
+#         bin_size = np.sum(bin_idx)
+#         if bin_size == 0:
+#             continue
+#         else:
+#             bin_acc = np.sum(preds[bin_idx] == labels[bin_idx]) / bin_size
+#             bin_conf = np.sum(confidences[bin_idx]) / bin_size
+#             ece_score += np.abs(bin_acc - bin_conf) * bin_size
+#
+#     ece_score /= num_data
+#     print('ECE {} calibration: {}'.format(mode, ece_score))
+#
+#     #    acc_j, acc_std = error_resampler(probs, labels, get_accuracy)
+#     #    print('Accuracy {} calibration: {}'.format(mode,acc_j))
+#     ##    thres_brier_score = evaluate_brier(probs, labels, threshold)
+#     #    thres_br, thres_br_std = error_resampler(probs, labels, evaluate_brier, threshold = threshold)
+#     #    print('Brier {} calibration: {}'.format(mode,thres_br))
+#
+#     osr_thresh_acc = evaluate_open_set(probs, labels, threshold)
+#     print('Threshold Accuracy {} calibration: {}'.format(mode, osr_thresh_acc))
+#     return ece_score
 
 
 # def train(model, dataset, optimizer, num_epoch, device, scheduler=None):

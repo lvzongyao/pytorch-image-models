@@ -557,10 +557,17 @@ def main():
         # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
     ])
 
-    calibration_list = ['histogram_binning',
-                        'matrix_scaling',
-                        'vector_scaling',
-                        'temperature_scaling']
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize(96),
+        #    transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
+    ])
+
+    # calibration_list = ['histogram_binning',
+    #                     'matrix_scaling',
+    #                     'vector_scaling',
+    #                     'temperature_scaling']
+    calibration_list = ['temperature_scaling']
 
     train_excluded_labels = list(range(6, 10))
     test_excluded_labels = list(range(6))
@@ -605,6 +612,7 @@ def main():
     )
 
     main_dataset = get_train_dataset(dataset, train_transform, root, args.dataset)
+    # main_dataset = get_train_dataset(dataset, transform_train, root, args.dataset)
     # labels = np.array(get_labels(main_dataset))
     train_idxs = get_idxs_without_excluded(get_labels(main_dataset), train_excluded_labels)
     train_modified = torch.utils.data.Subset(main_dataset, train_idxs)
@@ -613,6 +621,7 @@ def main():
                                                                                 len(train_idxs) - int(
                                                                                     0.9 * len(train_idxs))])
     test_dataset = get_test_dataset(dataset, test_transform, root, args.dataset)
+    # test_dataset = get_test_dataset(dataset, transform_test, root, args.dataset)
     #########################################################
 
     # # create the train and eval datasets
@@ -829,41 +838,56 @@ def main():
 
     #########################################################
     ###################### calibration ######################
+    # tr_dataloader, val_dataloader = get_train_loader(args.dataset, data_dir)
+    # test_dataloader = get_test_loader(args.dataset, data_dir)
+    train_loader, val_loader = get_train_loader(args.dataset, root)
+    test_loader = get_test_loader(args.dataset, root)
+
+    print('Validation: ', end='')
+    val_logits, val_labels = test(model, val_loader, device)
+
+    print('OOD accuracy without the "unknown" label: ', end='')
     test_logits, test_labels = test(model, test_loader, device)
     test_probs = softmax(test_logits, axis=1)
 
     # evaluate confidence calibration of original model
     reliability_diagrams(test_probs, test_labels, mode='before', experiment=exp_name)
+
     exp_data_path = os.path.join(output_dir, 'test_data.csv')
     exp_f = open(exp_data_path, 'w')
     writer = csv.writer(exp_f)
     writer.writerow(
         [args.model, args.dataset, 'best_loss', 'val_acc', 'val_std', 'uncalibrated_brier', 'uncalib_acc', 'test ECE',
          'test_acc', 'test_acc_std', 'test_brier', 'test_brier_std'])
-    val_ece = expected_calibration_error(test_probs, test_labels, mode='before')
-    val_logits, val_labels = test(model, val_loader, device)
-    val_probs = softmax(val_logits, axis=1)
+
+    # val_ece = expected_calibration_error(test_probs, test_labels, mode='before')
+    # val_logits, val_labels = test(model, val_loader, device)
+    # val_probs = softmax(val_logits, axis=1)
     # val_acc_j, val_acc_std = error_resampler(val_probs, val_labels, get_accuracy)
     threshold = 0
     for i in range(0, 20):
-        print(f"threshold is {threshold} \n\n\n ")
-        thres_brier_score = evaluate_brier(test_probs, test_labels, threshold)
-        print('Brier {} without calibration: {}'.format("Uncalibrated", thres_brier_score))
-        uncalibrated_osr_thresh_acc = evaluate_open_set(test_probs, test_labels, threshold)
-        print('Threshold Accuracy {} without calibration: {}'.format("Uncalibrated", uncalibrated_osr_thresh_acc))
+        print("threshold is {:.2f}:".format(threshold))
+
+        uncalibrated_osr_thresh_acc = evaluate_open_set(test_probs, test_labels, threshold, is_openmax=False)
+        # print('Threshold Accuracy {} without calibration: {}'.format("Uncalibrated", uncalibrated_osr_thresh_acc))
+        print('Threshold accuracy: {:>26.3f} %'.format(uncalibrated_osr_thresh_acc))
+
+        # thres_brier_score = evaluate_brier(test_probs, test_labels, threshold)
+        # print('Brier {} without calibration: {}'.format("Uncalibrated", thres_brier_score))
+
         for cali in calibration_list:
             print("calibrating")
             calibrator = get_calibrator(val_logits, val_labels, mode=cali)
             confidences = calibrator(test_logits)
             reliability_diagrams(confidences, test_labels, mode=cali, experiment=exp_name)
-            test_ece = expected_calibration_error(confidences, test_labels, mode=cali, threshold=threshold)
-            acc_j, acc_std = error_resampler(confidences, test_labels, get_accuracy)
-            print('Accuracy {} calibration: {}'.format(cali, acc_j))
-            thres_br, thres_br_std = error_resampler(confidences, test_labels, evaluate_brier, threshold=threshold)
-            print('Brier {} calibration: {}'.format(cali, thres_br))
-            newrow = [args.model, args.dataset, best_metric, val_acc_j, val_acc_std, thres_brier_score,
-                      uncalibrated_osr_thresh_acc, test_ece, acc_j, acc_std, thres_br, thres_br_std]
-            writer.writerow(newrow)
+            test_ece = expected_calibration_error(confidences, test_labels, threshold=threshold)
+            print('ECE {} calibration:    {}'.format(cali, test_ece))
+
+            # thres_br, thres_br_std = error_resampler(confidences, test_labels, evaluate_brier, threshold=threshold)
+            # print('Brier {} calibration: {}'.format(cali, thres_br))
+            # newrow = [args.model, args.dataset, best_metric, val_acc_j, val_acc_std, thres_brier_score,
+            #           uncalibrated_osr_thresh_acc, test_ece, acc_j, acc_std, thres_br, thres_br_std]
+            # writer.writerow(newrow)
 
         threshold += 0.05
     exp_f.close()
@@ -1132,4 +1156,4 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
 if __name__ == '__main__':
     main()
 
-    trace()
+    # trace()
