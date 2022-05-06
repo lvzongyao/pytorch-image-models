@@ -15,6 +15,8 @@ torch.manual_seed(0)
 args = argparser()
 # data_dir = os.path.join('/data/public_data', args.dataset.upper())
 data_dir = os.path.join('E:/Datasets', args.dataset.upper())
+if args.dataset == 'mnist':
+    data_dir = os.path.join('E:/Datasets')
 os.environ['CUDA_VISIBLE_DEVICES'] = str(args.num_cuda)
 device = torch.device('cuda:0' if torch.cuda.is_available else 'cpu')
 
@@ -53,6 +55,9 @@ def main():
         # args.model,
         args.model_type,
         num_classes=num_classes,
+
+        # input_size=(1, 32, 32),
+
         # pretrained=args.pretrained,
         # num_classes=args.num_classes,
         # drop_rate=args.drop,

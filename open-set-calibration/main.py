@@ -7,6 +7,8 @@ from scipy.special import softmax
 from utils import *
 from train import *
 
+from timm.models import create_model
+
 torch.manual_seed(0)
 
 args = argparser()
@@ -14,10 +16,11 @@ args = argparser()
 data_dir = os.path.join('E:/Datasets', args.dataset.upper())
 os.environ['CUDA_VISIBLE_DEVICES'] = str(args.num_cuda)
 
-calibration_list = ['histogram_binning', 
-                    'matrix_scaling', 
-                    'vector_scaling',
-                    'temperature_scaling']
+# calibration_list = ['histogram_binning',
+#                     'matrix_scaling',
+#                     'vector_scaling',
+#                     'temperature_scaling']
+calibration_list = ['temperature_scaling']
 
 
 def main():
@@ -28,7 +31,28 @@ def main():
     print('num of classes: ', num_classes)
 
     device = torch.device('cuda:0' if torch.cuda.is_available else 'cpu')
-    model = get_model(args.model_type, num_classes=num_classes)
+
+    # model = get_model(args.model_type, num_classes=num_classes)
+    model = create_model(
+        # args.model,
+        args.model_type,
+        num_classes=num_classes,
+
+        # input_size=(1, 32, 32),
+
+        # pretrained=args.pretrained,
+        # num_classes=args.num_classes,
+        # drop_rate=args.drop,
+        # drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
+        # drop_path_rate=args.drop_path,
+        # drop_block_rate=args.drop_block,
+        # global_pool=args.gp,
+        # bn_momentum=args.bn_momentum,
+        # bn_eps=args.bn_eps,
+        # scriptable=args.torchscript,
+        # checkpoint_path=args.initial_checkpoint
+    )
+
     model.to(device)
     optimizer, scheduler = get_optim(args.optimizer, model)
     tr_dataset, val_dataset = get_train_loader(args.dataset, data_dir)

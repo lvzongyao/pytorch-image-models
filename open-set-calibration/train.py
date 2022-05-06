@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import brier_score_loss
 
-from JackKnife import *
 import time
 
 criterion = nn.CrossEntropyLoss()

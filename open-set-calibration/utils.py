@@ -4,11 +4,11 @@ import torch
 import torch.optim as optim
 import torchvision
 import torchvision.models as models
-from resnet import *
+# from resnet import *
 import torchvision.transforms as transforms
 
 from calibrate import *
-from models import resnet110
+# from models import resnet110
 
 
 def argparser():
