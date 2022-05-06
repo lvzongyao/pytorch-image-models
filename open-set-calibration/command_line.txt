@@ -1,4 +1,6 @@
-python train_p.py E:/Datasets/imagenette2-320 --model resnet18 --num-classes 6 --batch-size 128 --epochs 5  --input-size 3 32 32 --dataset cifar10 --experiment cifar_eff_osr
+python train_p.py E:/Datasets/imagenette2-320 --model resnet18 --num-classes 6 --sched cosine --epochs 5 --batch-size 128 --lr 0.01 --reprob 0.5 --remode pixel --amp -j 4 --input-size 3 32 32 --dataset cifar10
+python train_p.py E:/Datasets/imagenette2-320 --model resnet18 --num-classes 6 --sched cosine --epochs 5 --batch-size 128 --lr 0.01 --input-size 3 32 32 --dataset cifar10
+python train_p.py E:/Datasets/imagenette2-320 --model resnet18 --num-classes 6 --batch-size 128 --epochs 5 --input-size 3 32 32 --dataset cifar10 --experiment cifar_eff_osr
 
 
 
