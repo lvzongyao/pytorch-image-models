@@ -26,13 +26,13 @@ criterion = nn.CrossEntropyLoss()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-transform_resize = transforms.Compose([
-    # transforms.RandomCrop(32, padding=4),
-    # transforms.RandomHorizontalFlip(),
-    transforms.Resize(96),
-    transforms.ToTensor(),
-    # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
-])
+# transform_resize = transforms.Compose([
+#     # transforms.RandomCrop(32, padding=4),
+#     # transforms.RandomHorizontalFlip(),
+#     transforms.Resize(96),
+#     transforms.ToTensor(),
+#     # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
+# ])
 
 
 def reliability_diagrams(probs, labels, mode):
@@ -121,18 +121,6 @@ def evaluate_open_set(probs, labels, threshold=0.7, is_openmax=False):
         else:
             new_predictions.append(6)
     open_acc = 100 * np.mean(new_predictions == new_labels)
-
-    # confidences = probs.max(axis=1)
-    # preds = np.argmax(probs, axis=1)
-    # new_preds = []
-    # for conf, pr in zip(confidences, preds):
-    #     if conf < threshold:
-    #         new_preds.append(-1)
-    #     else:
-    #         new_preds.append(pr)
-    # new_preds = np.array(new_preds)
-    # new_labels = np.array(new_labels)
-    # open_acc = 100 * np.mean(new_preds == new_labels)
 
     return open_acc
 
