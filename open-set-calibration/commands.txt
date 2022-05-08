@@ -5,6 +5,8 @@ python main.py --dataset svhn --model_type resnet18 --optimizer sgd --num_epoch 
 python main.py --dataset cifar10 --model_type densenet121 --optimizer adam --num_epoch 60
 python main.py --dataset cifar10 --model_type densenet121 --optimizer sgd --num_epoch 60
 python main.py --dataset svhn --model_type densenet121 --optimizer sgd --num_epoch 40
+python main.py --dataset cifar10 --model_type efficientnetv2_s --optimizer sgd --num_epoch 70
+python main.py --dataset svhn --model_type efficientnetv2_s --optimizer sgd --num_epoch 70
 load pre-trained model: 
 python main.py --dataset cifar10 --model_type resnet18 --optimizer adam --load_model checkpoints/resnet18_cifar10.pt
 python main.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/resnet18_cifar10_128_128_sgd_lr002_50e.pt
