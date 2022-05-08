@@ -1,0 +1,41 @@
+[2022/4/14 19:03] Gutierrez, Nolan
+Brier Uncalibrated without calibration: [0.13201557]
+Threshold Accuracy openmax calibration: 0.7346860643185299
+Threshold Accuracy Uncalibrated without calibration: 37.97856049004594
+calibrating
+ECE histogram_binning calibration: 0.12854659538798371
+Threshold Accuracy openmax calibration: 0.725114854517611
+Threshold Accuracy histogram_binning calibration: 0.0
+Accuracy histogram_binning calibration: 72.42346603763534
+Brier histogram_binning calibration: 0.11525569987927829
+calibrating
+ECE matrix_scaling calibration: 0.3021746140891889
+Threshold Accuracy openmax calibration: 0.10872894333843798
+Threshold Accuracy matrix_scaling calibration: 0.40199081163859113
+Accuracy matrix_scaling calibration: 10.802422539611927
+Brier matrix_scaling calibration: 0.3421944080011656
+calibrating
+ECE vector_scaling calibration: 0.030885538591177486
+Threshold Accuracy openmax calibration: 0.7299004594180705
+Threshold Accuracy vector_scaling calibration: 41.807044410413475
+Accuracy vector_scaling calibration: 72.88988579058413
+Brier vector_scaling calibration: 0.11177312167886004
+calibrating
+ECE temperature_scaling calibration: 0.012556134969863202
+Threshold Accuracy openmax calibration: 0.7346860643185299
+Threshold Accuracy temperature_scaling calibration: 39.54823889739663
+Accuracy temperature_scaling calibration: 73.35983483969657
+Brier temperature_scaling calibration: 0.12747807658519422
+threshold is 0.9500000000000003efficientnet is getting pretty high
+
+[2022/4/14 19:04] Gutierrez, Nolan
+Accuracy of the network : 73.46860643185299 %%
+ECE before calibration: 0.014946325509530844
+Threshold Accuracy openmax calibration: 0.7346860643185299
+Threshold Accuracy before calibration: 64.14624808575805
+Accuracy of the network : 74.5405819295559 %%
+threshold is 0
+
+[2022/4/14 19:06] Gutierrez, Nolan
+I guess I mean compared to something with a bit more optimized training. the 300 epoch one wasn't the best either
+
