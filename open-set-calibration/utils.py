@@ -86,9 +86,9 @@ def get_train_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
 
     dataset = get_train_dataset(dataset, transform, root, target)
     ### cifar10
-    train, val = torch.utils.data.random_split(dataset, [45000, 5000])
+    # train, val = torch.utils.data.random_split(dataset, [45000, 5000])
     ### svhn
-    # train, val = torch.utils.data.random_split(dataset, [65931, 7326])
+    train, val = torch.utils.data.random_split(dataset, [65931, 7326])
     # train, val = torch.utils.data.random_split(train_modified, [int(0.9 * len(train_idxs)),
     #                                                             len(train_idxs) - int(0.9 * len(train_idxs))])
     train_loader = torch.utils.data.DataLoader(train, batch_size=batch_size,
