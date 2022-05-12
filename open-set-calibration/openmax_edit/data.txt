@@ -1,0 +1,631 @@
+python openmax_main_part.py --dataset cifar10 --model_type resnet18 --optimizer sgd --num_epoch 40 --load_model resnet18_cifar10.pt 
+testing openmax
+testing openmax
+ECE before calibration: 0.4073218425750732
+Accuracy before calibration: 44.03
+Brier before calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy before calibration: 47.339999999999996
+threshold is 0 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.03
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.12
+calibrating
+ECE matrix_scaling calibration: 0.20147121615409852
+Accuracy matrix_scaling calibration: 20.25
+Brier matrix_scaling calibration: 0.3501295121979817
+Threshold Accuracy openmax calibration: 0.2736
+Threshold Accuracy matrix_scaling calibration: 18.57
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 39.33
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 44.03
+threshold is 0.05 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.03
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.12
+calibrating
+ECE matrix_scaling calibration: 0.2885243952512741
+Accuracy matrix_scaling calibration: 22.3
+Brier matrix_scaling calibration: 0.25964682390456995
+Threshold Accuracy openmax calibration: 0.2572
+Threshold Accuracy matrix_scaling calibration: 22.0
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 39.33
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 44.03
+threshold is 0.1 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.03
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.12
+calibrating
+ECE matrix_scaling calibration: 0.2311215009689331
+Accuracy matrix_scaling calibration: 19.61
+Brier matrix_scaling calibration: 0.3265923951040658
+Threshold Accuracy openmax calibration: 0.2052
+Threshold Accuracy matrix_scaling calibration: 19.17
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 39.33
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 44.03
+threshold is 0.15000000000000002 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.03
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.12
+calibrating
+ECE matrix_scaling calibration: 0.2250209590792656
+Accuracy matrix_scaling calibration: 24.240000000000002
+Brier matrix_scaling calibration: 0.29347583917093384
+Threshold Accuracy openmax calibration: 0.2502
+Threshold Accuracy matrix_scaling calibration: 24.240000000000002
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 39.33
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 44.03
+threshold is 0.2 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.03
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.12
+calibrating
+ECE matrix_scaling calibration: 0.2724578402042389
+Accuracy matrix_scaling calibration: 20.150000000000002
+Brier matrix_scaling calibration: 0.2893763342993309
+Threshold Accuracy openmax calibration: 0.2222
+Threshold Accuracy matrix_scaling calibration: 20.1
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 39.42
+calibrating
+/home/nxg3225xx/GitHub/calibration-evaluation/train.py:61: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`).
+  plt.figure(figsize=(8, 8))
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 44.05
+threshold is 0.25 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.05
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.12
+calibrating
+ECE matrix_scaling calibration: 0.2300196334898472
+Accuracy matrix_scaling calibration: 17.57
+Brier matrix_scaling calibration: 0.3474322236042384
+Threshold Accuracy openmax calibration: 0.2001
+Threshold Accuracy matrix_scaling calibration: 19.16
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 40.22
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 44.6
+threshold is 0.3 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.190000000000005
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.529999999999994
+calibrating
+ECE matrix_scaling calibration: 0.154306102848053
+Accuracy matrix_scaling calibration: 24.44
+Brier matrix_scaling calibration: 0.34621267070157574
+Threshold Accuracy openmax calibration: 0.2589
+Threshold Accuracy matrix_scaling calibration: 37.12
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 42.95
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 46.02
+threshold is 0.35 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 44.529999999999994
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.529999999999994
+calibrating
+ECE matrix_scaling calibration: 0.24978209128379822
+Accuracy matrix_scaling calibration: 21.099999999999998
+Brier matrix_scaling calibration: 0.29790923046269385
+Threshold Accuracy openmax calibration: 0.2139
+Threshold Accuracy matrix_scaling calibration: 29.01
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 44.89
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 48.08
+threshold is 0.39999999999999997 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 45.11
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.529999999999994
+calibrating
+ECE matrix_scaling calibration: 0.21422642660140992
+Accuracy matrix_scaling calibration: 21.16
+Brier matrix_scaling calibration: 0.33322516948462005
+Threshold Accuracy openmax calibration: 0.2851
+Threshold Accuracy matrix_scaling calibration: 36.720000000000006
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 46.17
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 50.2
+threshold is 0.44999999999999996 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 45.910000000000004
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 44.940000000000005
+calibrating
+ECE matrix_scaling calibration: 0.3712082823753357
+Accuracy matrix_scaling calibration: 8.49
+Brier matrix_scaling calibration: 0.30476088965142634
+Threshold Accuracy openmax calibration: 0.0976
+Threshold Accuracy matrix_scaling calibration: 27.950000000000003
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 46.92
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 52.16
+threshold is 0.49999999999999994 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 47.339999999999996
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 47.02
+calibrating
+ECE matrix_scaling calibration: 0.32199846200942994
+Accuracy matrix_scaling calibration: 15.479999999999999
+Brier matrix_scaling calibration: 0.2853009827999866
+Threshold Accuracy openmax calibration: 0.2212
+Threshold Accuracy matrix_scaling calibration: 34.55
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 47.46
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 53.55
+threshold is 0.5499999999999999 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 48.42
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 47.58
+calibrating
+ECE matrix_scaling calibration: 0.3063701918363571
+Accuracy matrix_scaling calibration: 13.68
+Brier matrix_scaling calibration: 0.3099074681505185
+Threshold Accuracy openmax calibration: 0.2331
+Threshold Accuracy matrix_scaling calibration: 37.86
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 47.93
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 54.86
+threshold is 0.6 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 49.32
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 47.73
+calibrating
+ECE matrix_scaling calibration: 0.3830006020069122
+Accuracy matrix_scaling calibration: 7.19
+Brier matrix_scaling calibration: 0.30170092266854426
+Threshold Accuracy openmax calibration: 0.0879
+Threshold Accuracy matrix_scaling calibration: 35.15
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 48.18
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 55.53
+threshold is 0.65 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 50.38
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 48.46
+calibrating
+ECE matrix_scaling calibration: 0.30325751972198484
+Accuracy matrix_scaling calibration: 13.91
+Brier matrix_scaling calibration: 0.31795762980735226
+Threshold Accuracy openmax calibration: 0.1669
+Threshold Accuracy matrix_scaling calibration: 41.17
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 48.18
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 55.83
+threshold is 0.7000000000000001 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 51.32
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 49.99
+calibrating
+ECE matrix_scaling calibration: 0.3786624033927917
+Accuracy matrix_scaling calibration: 7.22
+Brier matrix_scaling calibration: 0.3075603244591271
+Threshold Accuracy openmax calibration: 0.0846
+Threshold Accuracy matrix_scaling calibration: 38.550000000000004
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 47.94
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 56.10000000000001
+threshold is 0.7500000000000001 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 52.21
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 49.85
+calibrating
+ECE matrix_scaling calibration: 0.34311868673563006
+Accuracy matrix_scaling calibration: 3.29
+Brier matrix_scaling calibration: 0.3733274692383825
+Threshold Accuracy openmax calibration: 0.0384
+Threshold Accuracy matrix_scaling calibration: 39.93
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 48.03
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 55.78999999999999
+threshold is 0.8000000000000002 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 53.239999999999995
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 40.0
+calibrating
+ECE matrix_scaling calibration: 0.2542806279182434
+Accuracy matrix_scaling calibration: 26.3
+Brier matrix_scaling calibration: 0.2515952498633754
+Threshold Accuracy openmax calibration: 0.2801
+Threshold Accuracy matrix_scaling calibration: 42.03
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 47.71
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 54.790000000000006
+threshold is 0.8500000000000002 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 54.120000000000005
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 40.0
+calibrating
+ECE matrix_scaling calibration: 0.337332311630249
+Accuracy matrix_scaling calibration: 12.17
+Brier matrix_scaling calibration: 0.3040576402297341
+Threshold Accuracy openmax calibration: 0.2293
+Threshold Accuracy matrix_scaling calibration: 39.94
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 47.63
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 53.71
+threshold is 0.9000000000000002 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 55.06999999999999
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 40.0
+calibrating
+ECE matrix_scaling calibration: 0.2648273481726646
+Accuracy matrix_scaling calibration: 14.26
+Brier matrix_scaling calibration: 0.3424476591647852
+Threshold Accuracy openmax calibration: 0.1572
+Threshold Accuracy matrix_scaling calibration: 40.0
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 47.410000000000004
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 51.55
+threshold is 0.9500000000000003 
+
+
+ 
+Brier Uncalibrated without calibration: 0.05812804464963998
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy Uncalibrated without calibration: 55.620000000000005
+calibrating
+ECE histogram_binning calibration: 0.2834168581861409
+Accuracy histogram_binning calibration: 44.12
+Brier histogram_binning calibration: 0.08472773410619289
+Threshold Accuracy openmax calibration: 0.4412
+Threshold Accuracy histogram_binning calibration: 40.0
+calibrating
+ECE matrix_scaling calibration: 0.24692209858894348
+Accuracy matrix_scaling calibration: 22.53
+Brier matrix_scaling calibration: 0.2960228671859009
+Threshold Accuracy openmax calibration: 0.2682
+Threshold Accuracy matrix_scaling calibration: 41.17
+calibrating
+ECE vector_scaling calibration: 0.20665012102127076
+Accuracy vector_scaling calibration: 39.33
+Brier vector_scaling calibration: 0.21896098967551733
+Threshold Accuracy openmax calibration: 0.3933
+Threshold Accuracy vector_scaling calibration: 46.989999999999995
+calibrating
+ECE temperature_scaling calibration: 0.22082935853004457
+Accuracy temperature_scaling calibration: 44.03
+Brier temperature_scaling calibration: 0.16067820691000462
+Threshold Accuracy openmax calibration: 0.4403
+Threshold Accuracy temperature_scaling calibration: 47.449999999999996
+
