@@ -10,6 +10,7 @@ python main.py --dataset svhn --model_type efficientnetv2_s --optimizer sgd --nu
 load pre-trained model: 
 python main.py --dataset cifar10 --model_type resnet18 --optimizer adam --load_model checkpoints/resnet18_cifar10.pt
 python main.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/resnet18_cifar10_128_128_sgd_lr002_50e.pt
+python main.py --dataset cifar10 --model_type efficientnetv2_s --optimizer sgd --load_model checkpoints/closed_efficientnetv2_s_cifar10_100e.pt
 
 
 regular open set:
@@ -18,6 +19,7 @@ python main_partitioned.py --dataset svhn --model_type resnet18 --optimizer sgd 
 python main_partitioned.py --dataset cifar10 --model_type efficientnetv2_s --optimizer sgd --num_epoch 70
 python main_partitioned.py --dataset svhn --model_type efficientnetv2_s --optimizer sgd --num_epoch 80
 python main_partitioned.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/open_resnet18_cifar10_60e.pt
+python main_partitioned.py --dataset svhn --model_type densenet121 --optimizer sgd --load_model checkpoints/open_densenet121_svhn_40e.pt
 
 
 openmax_edit:
