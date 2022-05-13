@@ -25,6 +25,7 @@ python main_partitioned.py --dataset svhn --model_type densenet121 --optimizer s
 openmax_edit:
 python openmax_main_part.py --dataset cifar10 --model_type resnet18 --optimizer sgd --num_epoch 40 
 python openmax_main_part.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/open_resnet18_cifar10_60e.pt
+python openmax_main_part.py --dataset svhn --model_type resnet18 --optimizer sgd --load_model checkpoints/open_resnet18_svhn_40e.pt
 
 
 Adversarial training:

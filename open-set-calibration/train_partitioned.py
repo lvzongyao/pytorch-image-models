@@ -16,7 +16,7 @@ from pdb import set_trace as trace
 import torchvision
 
 from sklearn.metrics import brier_score_loss
-# from openmax_edit.openmax import compute_openmax
+from openmax_edit.openmax import compute_openmax
 from utils_partitioned import *
 import torchattacks
 
@@ -26,13 +26,13 @@ criterion = nn.CrossEntropyLoss()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# transform_resize = transforms.Compose([
-#     # transforms.RandomCrop(32, padding=4),
-#     # transforms.RandomHorizontalFlip(),
-#     transforms.Resize(96),
-#     transforms.ToTensor(),
-#     # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
-# ])
+transform = transforms.Compose([
+    # transforms.RandomCrop(32, padding=4),
+    # transforms.RandomHorizontalFlip(),
+    transforms.Resize(96),
+    transforms.ToTensor(),
+    # transforms.Normalize((0.5070, 0.4865, 0.4409), (0.2673, 0.2564, 0.2761))
+])
 
 
 def reliability_diagrams(probs, labels, mode):
@@ -423,7 +423,7 @@ def test_openmax(model, dataset, device, mean_filename, distance_filename):
             targets += list(labels.detach().cpu().numpy())
             logits.append(outputs.detach().cpu().numpy())
 
-    print("Accuracy of the network : {} %%".format(100 * correct / total))
+    print("Accuracy of the network: {} %".format(100 * correct / total))
 
     logits = np.concatenate(logits, axis=0)
     softmaxes = np.concatenate(softmaxes, axis=0)
@@ -474,7 +474,11 @@ def save_activations(net, mean_filename, distances_filename, target, root):
         dataset = torchvision.datasets.CIFAR100
     elif target == 'svhn':
         dataset = torchvision.datasets.SVHN
-    dataset = dataset(root=root, train=True, transform=transform_resize, download=False)
+    if target == "cifar10" or target == 'cifar100' or target == "mnist":
+        dataset = dataset(root=root, train=True, transform=transform, download=False)
+    else:
+        dataset = dataset(root=root, split='train', transform=transform, download=False)
+    # dataset = dataset(root=root, train=True, transform=transform_resize, download=False)
     #    dataset = torchvision.datasets.CIFAR10(root='E:/Datasets/CIFAR10', train=True,
     #                                         download=False, transform=transform_resize)
     trainloader_no_shuffle = DataLoader(dataset, batch_size=64, shuffle=False)

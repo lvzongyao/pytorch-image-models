@@ -1,0 +1,84 @@
+Validation: Accuracy of the network : 93.53137146029984 %
+OOD accuracy without the "unknown" label: Accuracy of the network : 60.08 %
+threshold is 0.00:
+Threshold accuracy: 60.100 %
+calibrating
+ECE temperature_scaling calibration: 0.3316024345993996
+threshold is 0.05:
+Threshold accuracy: 60.100 %
+calibrating
+ECE temperature_scaling calibration: 0.3316024345993996
+threshold is 0.10:
+Threshold accuracy: 60.100 %
+calibrating
+ECE temperature_scaling calibration: 0.3316024345993996
+threshold is 0.15:
+Threshold accuracy: 60.100 %
+calibrating
+ECE temperature_scaling calibration: 0.3316024345993996
+threshold is 0.20:
+Threshold accuracy: 60.100 %
+calibrating
+ECE temperature_scaling calibration: 0.3316024345993996
+threshold is 0.25:
+Threshold accuracy: 60.100 %
+calibrating
+ECE temperature_scaling calibration: 0.3316024345993996
+threshold is 0.30:
+Threshold accuracy: 60.100 %
+calibrating
+ECE temperature_scaling calibration: 0.3316024345993996
+threshold is 0.35:
+Threshold accuracy: 60.220 %
+calibrating
+ECE temperature_scaling calibration: 0.3319929223537445
+threshold is 0.40:
+Threshold accuracy: 60.530 %
+calibrating
+ECE temperature_scaling calibration: 0.3328034823417664
+threshold is 0.45:
+Threshold accuracy: 61.390 %
+calibrating
+ECE temperature_scaling calibration: 0.33428104915618895
+threshold is 0.50:
+Threshold accuracy: 63.020 %
+calibrating
+ECE temperature_scaling calibration: 0.3373499385356903
+threshold is 0.55:
+Threshold accuracy: 64.950 %
+calibrating
+ECE temperature_scaling calibration: 0.34151120910644533
+threshold is 0.60:
+Threshold accuracy: 66.770 %
+calibrating
+ECE temperature_scaling calibration: 0.3439463035583496
+threshold is 0.65:
+Threshold accuracy: 68.680 %
+calibrating
+ECE temperature_scaling calibration: 0.34637853736877444
+threshold is 0.70:
+Threshold accuracy: 70.610 %
+calibrating
+ECE temperature_scaling calibration: 0.34817659759521485
+threshold is 0.75:
+Threshold accuracy: 72.930 %
+calibrating
+ECE temperature_scaling calibration: 0.3493990026473999
+threshold is 0.80:
+Threshold accuracy: 75.460 %
+calibrating
+ECE temperature_scaling calibration: 0.35029330406188963
+threshold is 0.85:
+Threshold accuracy: 78.270 %
+calibrating
+ECE temperature_scaling calibration: 0.35101215505599975
+threshold is 0.90:
+Threshold accuracy: 81.680 %
+calibrating
+ECE temperature_scaling calibration: 0.35143836364746095
+threshold is 0.95:
+Threshold accuracy: 86.220 %
+calibrating
+ECE temperature_scaling calibration: 0.3515142163276672
+*** Best metric: 94.25319266226607 (epoch 156)
+[1]+ Done python -m webbrowser -t "https://github.com/rwightman/pytorch-image-models"

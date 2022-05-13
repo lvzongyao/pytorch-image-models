@@ -4,15 +4,18 @@ import torch
 import numpy as np
 from scipy.special import softmax
 
-from utils_partitioned import *
-from train_partitioned_414 import *
-from pdb import set_trace as trace
+from train_partitioned import *
+from timm.models import create_model
+# from pdb import set_trace as trace
 
 torch.manual_seed(0)
 
+device = torch.device('cuda:0' if torch.cuda.is_available else 'cpu')
 args = argparser()
 # data_dir = os.path.join('/data/public_data', args.dataset.upper())
 data_dir = os.path.join('E:/Datasets', args.dataset.upper())
+if args.dataset == 'mnist':
+    data_dir = os.path.join('E:/Datasets')
 os.environ['CUDA_VISIBLE_DEVICES'] = str(args.num_cuda)
 
 # calibration_list = ['histogram_binning',
@@ -23,6 +26,7 @@ calibration_list = ['temperature_scaling']
 
 is_openmax = True
 
+
 def main():
     if args.dataset == 'cifar10':
         num_classes = 6
@@ -30,10 +34,33 @@ def main():
         num_classes = 6
     elif args.dataset == 'cifar100':
         num_classes = 100
+    elif args.dataset == 'svhn':
+        num_classes = 6
+    elif args.dataset == 'mnist':
+        num_classes = 6
 
-    device = torch.device('cuda:0' if torch.cuda.is_available else 'cpu')
+
     # model = get_model(args.model_type, num_classes=num_classes)
-    model = get_model(args.model_type, num_classes=num_classes, num_channels=3)
+    # model = get_model(args.model_type, num_classes=num_classes, num_channels=3)
+    model = create_model(
+        # args.model,
+        args.model_type,
+        num_classes=num_classes,
+
+        # input_size=(1, 32, 32),
+
+        # pretrained=args.pretrained,
+        # num_classes=args.num_classes,
+        # drop_rate=args.drop,
+        # drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
+        # drop_path_rate=args.drop_path,
+        # drop_block_rate=args.drop_block,
+        # global_pool=args.gp,
+        # bn_momentum=args.bn_momentum,
+        # bn_eps=args.bn_eps,
+        # scriptable=args.torchscript,
+        # checkpoint_path=args.initial_checkpoint
+    )
     model.to(device)
     optimizer, scheduler = get_optim(args.optimizer, model)
     tr_dataset, val_dataset = get_train_loader(args.dataset, data_dir)
@@ -51,28 +78,28 @@ def main():
     print('OOD accuracy without the "unknown" label: ', end='')
     test_logits, test_labels = test(model, test_dataloader, device)
 
+    print('testing openmax...')
+    m_filename, d_filename = "openmax_edit/mean_acts", "openmax_edit/dist_acts"
     ###########################################################################
     ### uncomment next few lines when creating new activations  
     ###########################################################################
-    m_filename, d_filename = "mean_acts", "dist_acts"
-    #    save_activations(model,m_filename, d_filename)
-    #    test_logits, test_labels = test(model, test_dataloader, device)
-    print('testing openmax...')
-    #    test_logits, test_labels = test_openmax(model, test_dataloader, device , m_filename + ".npy",d_filename + ".npy")
-    #    np.save("test_logits", test_logits)
-    #    np.save("test_labels", test_labels)
+    target, root = args.dataset, data_dir
+    save_activations(model, m_filename, d_filename, target, root)
+
+    test_logits, test_labels = test_openmax(model, test_dataloader, device , m_filename + ".npy",d_filename + ".npy")
+    np.save("openmax_edit/test_logits", test_logits)
+    np.save("openmax_edit/test_labels", test_labels)
+
     test_logits, test_labels = np.load("openmax_edit/test_logits.npy"), np.load("openmax_edit/test_labels.npy")
-    # print('testing openmax')
     test_probs = softmax(test_logits, axis=1)
 
     # evaluate confidence calibration of original model
     reliability_diagrams(test_probs, test_labels, mode='before')
 
-    #    val_logits, val_labels = test(model, val_dataset, device)
-    #    val_logits, val_labels = test_openmax(model, val_dataset, device , m_filename + ".npy",d_filename + ".npy")
-    #    np.save("val_logits", val_logits)
-    #    np.save("val_labels", val_labels)
-    val_logits, val_labels = np.load("openmax_edit/val_logits.npy"), np.load("openmax_edit/val_labels.npy")
+    val_logits, val_labels = test_openmax(model, val_dataset, device , m_filename + ".npy",d_filename + ".npy")
+    np.save("openmax_edit/val_logits", val_logits)
+    np.save("openmax_edit/val_labels", val_labels)
+    # val_logits, val_labels = np.load("openmax_edit/val_logits.npy"), np.load("openmax_edit/val_labels.npy")
 
     print('')
     threshold = 0
