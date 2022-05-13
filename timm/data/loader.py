@@ -1,3 +1,9 @@
+"""
+Changes for open set calibration:
+(1) New fast_collate function,
+(2) Commented out dataset.transform
+"""
+
 """ Loader Factory, Fast Collate, CUDA Prefetcher
 
 Prefetcher and Fast Collate inspired by NVIDIA APEX example at
@@ -19,11 +25,50 @@ from .distributed_sampler import OrderedDistributedSampler, RepeatAugSampler
 from .random_erasing import RandomErasing
 from .mixup import FastCollateMixup
 
+import PIL
+import torchvision.transforms as transforms
+
+
+# def fast_collate(batch):
+#     """ A fast collation function optimized for uint8 images (np array or torch) and int64 targets (labels)"""
+#     assert isinstance(batch[0], tuple)
+#     batch_size = len(batch)
+#     if isinstance(batch[0][0], tuple):
+#         # This branch 'deinterleaves' and flattens tuples of input tensors into one tensor ordered by position
+#         # such that all tuple of position n will end up in a torch.split(tensor, batch_size) in nth position
+#         inner_tuple_size = len(batch[0][0])
+#         flattened_batch_size = batch_size * inner_tuple_size
+#         targets = torch.zeros(flattened_batch_size, dtype=torch.int64)
+#         tensor = torch.zeros((flattened_batch_size, *batch[0][0][0].shape), dtype=torch.uint8)
+#         for i in range(batch_size):
+#             assert len(batch[i][0]) == inner_tuple_size  # all input tensor tuples must be same length
+#             for j in range(inner_tuple_size):
+#                 targets[i + j * batch_size] = batch[i][1]
+#                 tensor[i + j * batch_size] += torch.from_numpy(batch[i][0][j])
+#         return tensor, targets
+#     elif isinstance(batch[0][0], np.ndarray):
+#         targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+#         assert len(targets) == batch_size
+#         tensor = torch.zeros((batch_size, *batch[0][0].shape), dtype=torch.uint8)
+#         for i in range(batch_size):
+#             tensor[i] += torch.from_numpy(batch[i][0])
+#         return tensor, targets
+#     elif isinstance(batch[0][0], torch.Tensor):
+#         targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+#         assert len(targets) == batch_size
+#         tensor = torch.zeros((batch_size, *batch[0][0].shape), dtype=torch.uint8)
+#         for i in range(batch_size):
+#             tensor[i].copy_(batch[i][0])
+#         return tensor, targets
+#     else:
+#         assert False
+
 
 def fast_collate(batch):
     """ A fast collation function optimized for uint8 images (np array or torch) and int64 targets (labels)"""
     assert isinstance(batch[0], tuple)
     batch_size = len(batch)
+
     if isinstance(batch[0][0], tuple):
         # This branch 'deinterleaves' and flattens tuples of input tensors into one tensor ordered by position
         # such that all tuple of position n will end up in a torch.split(tensor, batch_size) in nth position
@@ -38,11 +83,19 @@ def fast_collate(batch):
                 tensor[i + j * batch_size] += torch.from_numpy(batch[i][0][j])
         return tensor, targets
     elif isinstance(batch[0][0], np.ndarray):
+        arr_shape = batch[0][0].shape
+        if arr_shape[0] == 1:
+            batch_shape = (3, arr_shape[1], arr_shape[2])
+        else:
+            batch_shape = batch[0][0].shape
         targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
         assert len(targets) == batch_size
-        tensor = torch.zeros((batch_size, *batch[0][0].shape), dtype=torch.uint8)
+        tensor = torch.zeros((batch_size, *batch_shape), dtype=torch.uint8)
         for i in range(batch_size):
-            tensor[i] += torch.from_numpy(batch[i][0])
+            batch_arr = batch[i][0]
+            if arr_shape[0] == 1:
+                batch_arr = np.repeat(batch_arr, 3, axis=0)
+            tensor[i] += torch.from_numpy(batch_arr)
         return tensor, targets
     elif isinstance(batch[0][0], torch.Tensor):
         targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
@@ -51,6 +104,18 @@ def fast_collate(batch):
         for i in range(batch_size):
             tensor[i].copy_(batch[i][0])
         return tensor, targets
+    elif isinstance(batch[0][0], PIL.Image.Image):
+        targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+        assert len(targets) == batch_size
+        b_shape = np.array(batch[0][0].convert('RGB')).shape
+        torch_shape = (b_shape[2], b_shape[0], b_shape[1])
+        tensor = torch.zeros((batch_size, *torch_shape), dtype=torch.uint8)
+        for i in range(batch_size):
+            #            tensor[i] += torch.from_numpy(np.array(batch[i][0]))
+            x = np.array(batch[0][0].convert('RGB'))
+            tensor[i] += torch.from_numpy(np.transpose(x, (2, 0, 1)))
+        return tensor, targets
+
     else:
         assert False
 
@@ -199,28 +264,28 @@ def create_loader(
     if re_split:
         # apply RE to second half of batch if no aug split otherwise line up with aug split
         re_num_splits = num_aug_splits or 2
-    dataset.transform = create_transform(
-        input_size,
-        is_training=is_training,
-        use_prefetcher=use_prefetcher,
-        no_aug=no_aug,
-        scale=scale,
-        ratio=ratio,
-        hflip=hflip,
-        vflip=vflip,
-        color_jitter=color_jitter,
-        auto_augment=auto_augment,
-        interpolation=interpolation,
-        mean=mean,
-        std=std,
-        crop_pct=crop_pct,
-        tf_preprocessing=tf_preprocessing,
-        re_prob=re_prob,
-        re_mode=re_mode,
-        re_count=re_count,
-        re_num_splits=re_num_splits,
-        separate=num_aug_splits > 0,
-    )
+    # dataset.transform = create_transform(
+    #     input_size,
+    #     is_training=is_training,
+    #     use_prefetcher=use_prefetcher,
+    #     no_aug=no_aug,
+    #     scale=scale,
+    #     ratio=ratio,
+    #     hflip=hflip,
+    #     vflip=vflip,
+    #     color_jitter=color_jitter,
+    #     auto_augment=auto_augment,
+    #     interpolation=interpolation,
+    #     mean=mean,
+    #     std=std,
+    #     crop_pct=crop_pct,
+    #     tf_preprocessing=tf_preprocessing,
+    #     re_prob=re_prob,
+    #     re_mode=re_mode,
+    #     re_count=re_count,
+    #     re_num_splits=re_num_splits,
+    #     separate=num_aug_splits > 0,
+    # )
 
     sampler = None
     if distributed and not isinstance(dataset, torch.utils.data.IterableDataset):

@@ -481,7 +481,7 @@ def save_activations(net, mean_filename, distances_filename, target, root):
     # dataset = dataset(root=root, train=True, transform=transform_resize, download=False)
     #    dataset = torchvision.datasets.CIFAR10(root='E:/Datasets/CIFAR10', train=True,
     #                                         download=False, transform=transform_resize)
-    trainloader_no_shuffle = DataLoader(dataset, batch_size=64, shuffle=False)
+    trainloader_no_shuffle = DataLoader(dataset, batch_size=128, shuffle=False)
     pred = []
     with torch.no_grad():
         for x, y in trainloader_no_shuffle:
