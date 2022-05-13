@@ -28,6 +28,8 @@ python openmax_main_part.py --dataset cifar10 --model_type resnet18 --optimizer 
 python openmax_main_part.py --dataset svhn --model_type resnet18 --optimizer sgd --load_model checkpoints/open_resnet18_svhn_40e.pt
 python openmax_main_part.py --dataset cifar10 --model_type densenet121 --optimizer sgd --load_model checkpoints/open_densenet121_cifar10_60e.pt
 python openmax_main_part.py --dataset svhn --model_type densenet121 --optimizer sgd --load_model checkpoints/open_densenet121_svhn_40e.pt
+python openmax_main_part.py --dataset cifar10 --model_type efficientnetv2_s --optimizer sgd --load_model checkpoints/open_efficientnetv2_s_cifar10_70e.pt
+python openmax_main_part.py --dataset svhn --model_type efficientnetv2_s --optimizer sgd --load_model checkpoints/open_efficientnetv2_s_svhn_80e.pt
 
 
 Adversarial training:
