@@ -48,7 +48,7 @@ def main():
     elif args.dataset == 'mnist':
         num_classes = 6
         data_name = 'MNIST'
-        num_channels = 1
+        num_channels = 3
     print('num of classes: ', num_classes)
 
     # model = get_model(args.model_type, num_classes=num_classes, num_channels=num_channels)

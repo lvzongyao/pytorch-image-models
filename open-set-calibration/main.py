@@ -14,6 +14,8 @@ torch.manual_seed(0)
 args = argparser()
 # data_dir = os.path.join('/data/public_data', args.dataset.upper())
 data_dir = os.path.join('E:/Datasets', args.dataset.upper())
+if args.dataset == 'mnist':
+    data_dir = os.path.join('E:/Datasets')
 os.environ['CUDA_VISIBLE_DEVICES'] = str(args.num_cuda)
 
 # calibration_list = ['histogram_binning',
@@ -69,7 +71,7 @@ def main():
     # train the model from scratch or load trained model
     if not args.load_model:
         model_name = '{}_{}_{}'.format('closed_' + args.model_type, args.dataset, str(args.num_epoch) + 'e')
-        train(model, tr_dataset, test_dataset, optimizer, args.num_epoch, device, scheduler, model_name=model_name)
+        train(model, tr_dataset, val_dataset, test_dataset, optimizer, args.num_epoch, device, scheduler, model_name=model_name)
         # torch.save(model.state_dict(), model_name)
     else:
         model.load_state_dict(torch.load(args.load_model))

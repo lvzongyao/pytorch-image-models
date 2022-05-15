@@ -20,7 +20,6 @@ from openmax_edit.openmax import compute_openmax
 from utils_partitioned import *
 import torchattacks
 
-
 args = argparser()
 criterion = nn.CrossEntropyLoss()
 
@@ -203,7 +202,7 @@ def evaluate_brier_other(probs, labels, threshold):
 
 
 def brier_multi(targets, probs):
-    return np.mean(np.sum((probs - targets)**2, axis=1))
+    return np.mean(np.sum((probs - targets) ** 2, axis=1))
 
 
 def expected_calibration_error(probs, labels, threshold=0.5):
@@ -302,6 +301,7 @@ def evaluate_accuracy(data_iter, net, device=None):
             if isinstance(net, torch.nn.Module):
                 net.eval()  # evaluation mode, turn off dropout
                 acc_sum += (net(X.to(device)).argmax(dim=1) == y.to(device)).float().sum().cpu().item()
+                # trace()
                 net.train()  # back to training mode
             n += y.shape[0]
     return acc_sum / n
@@ -312,12 +312,15 @@ def train(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler
     print("training on ", device)
     loss = torch.nn.CrossEntropyLoss()
     batch_count = 0
+    best_acc = 0
+    best_count = 0
     for epoch in range(num_epochs):
         train_l_sum, train_acc_sum, n, start = 0.0, 0.0, 0, time.time()
         for X, y in train_iter:
             X = X.to(device)
             y = y.to(device)
             y_hat = net(X)
+            # trace()
             l = loss(y_hat, y)
             optimizer.zero_grad()
             l.backward()
@@ -328,16 +331,27 @@ def train(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler
             batch_count += 1
 
         # save and reload model
-        torch.save(net.state_dict(), './checkpoints/' + model_name + '.pt')
-        net = model.to(device)
-        net.load_state_dict(torch.load('./checkpoints/' + model_name + '.pt'))
+        # torch.save(net.state_dict(), './checkpoints/' + model_name + '.pt')
+        # net = model.to(device)
+        # net.load_state_dict(torch.load('./checkpoints/' + model_name + '.pt'))
 
         test_acc = evaluate_accuracy(test_iter, net)
+        if test_acc > best_acc:
+            best_count = 0
+            best_acc = test_acc
+            torch.save(net.state_dict(), './checkpoints/' + model_name + '.pt')
 
+        net = model.to(device)
+        net.load_state_dict(torch.load('./checkpoints/' + model_name + '.pt'))
         if scheduler:
             scheduler.step()
         print('epoch %d, loss %.4f, train acc %.3f, test acc %.3f, time %.1f sec'
               % (epoch + 1, train_l_sum / batch_count, train_acc_sum / n, test_acc, time.time() - start))
+
+        if test_acc <= best_acc:
+            best_count += 1
+            if best_count > 2:
+                break
 
 
 def train_adversarial(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler=None, steps=4,

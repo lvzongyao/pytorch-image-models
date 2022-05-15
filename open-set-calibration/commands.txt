@@ -3,8 +3,10 @@ train from scratch:
 python main.py --dataset cifar10 --model_type resnet18 --optimizer adam --num_epoch 60
 python main.py --dataset svhn --model_type resnet18 --optimizer sgd --num_epoch 40
 python main.py --dataset cifar10 --model_type densenet121 --optimizer adam --num_epoch 60
+python main.py --dataset mnist --model_type resnet18 --optimizer sgd --num_epoch 20
 python main.py --dataset cifar10 --model_type densenet121 --optimizer sgd --num_epoch 60
 python main.py --dataset svhn --model_type densenet121 --optimizer sgd --num_epoch 40
+python main.py --dataset mnist --model_type resnet18 --optimizer sgd --num_epoch 30
 python main.py --dataset cifar10 --model_type efficientnetv2_s --optimizer sgd --num_epoch 100
 python main.py --dataset svhn --model_type efficientnetv2_s --optimizer sgd --num_epoch 80
 load pre-trained model: 

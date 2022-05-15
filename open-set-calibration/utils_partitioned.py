@@ -102,10 +102,14 @@ def get_train_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
     # train, val = torch.utils.data.random_split(train_modified, [27000, 3000])
     train, val = torch.utils.data.random_split(train_modified, [int(0.9 * len(train_idxs)),
                                                                 len(train_idxs) - int(0.9 * len(train_idxs))])
+    # train_loader = torch.utils.data.DataLoader(train, batch_size=batch_size,
+    #                                            shuffle=shuffle, num_workers=2)
     train_loader = torch.utils.data.DataLoader(train, batch_size=batch_size,
-                                               shuffle=shuffle, num_workers=2)
+                                               shuffle=shuffle, num_workers=2, collate_fn=fast_collate)
+    # val_loader = torch.utils.data.DataLoader(val, batch_size=batch_size,
+    #                                          shuffle=shuffle, num_workers=2)
     val_loader = torch.utils.data.DataLoader(val, batch_size=batch_size,
-                                             shuffle=shuffle, num_workers=2)
+                                             shuffle=shuffle, num_workers=2, collate_fn=fast_collate)
 
     return train_loader, val_loader
 
@@ -140,8 +144,10 @@ def get_test_loader(target='cifar100', root='E:/Datasets/CIFAR10'):
 
     #    test_idxs = get_idxs_without_excluded(dataset.targets, train_excluded_labels)
     #    test_modified = torch.utils.data.Subset(dataset, test_idxs)
+    # loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    #                                      shuffle=shuffle, num_workers=2)
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
-                                         shuffle=shuffle, num_workers=2)
+                                         shuffle=shuffle, num_workers=2, collate_fn=fast_collate)
 
     return loader
 
@@ -221,3 +227,67 @@ def get_calibrator(logits, labels, mode):
         return vector_scaling(logits, labels)
     elif mode == 'temperature_scaling':
         return temperature_scaling(logits, labels)
+
+
+def fast_collate(batch):
+    """ A fast collation function optimized for uint8 images (np array or torch) and int64 targets (labels)"""
+    assert isinstance(batch[0], tuple)
+    batch_size = len(batch)
+
+    if isinstance(batch[0][0], tuple):
+        # This branch 'deinterleaves' and flattens tuples of input tensors into one tensor ordered by position
+        # such that all tuple of position n will end up in a torch.split(tensor, batch_size) in nth position
+        inner_tuple_size = len(batch[0][0])
+        flattened_batch_size = batch_size * inner_tuple_size
+        targets = torch.zeros(flattened_batch_size, dtype=torch.int64)
+        tensor = torch.zeros((flattened_batch_size, *batch[0][0][0].shape), dtype=torch.uint8)
+        for i in range(batch_size):
+            assert len(batch[i][0]) == inner_tuple_size  # all input tensor tuples must be same length
+            for j in range(inner_tuple_size):
+                targets[i + j * batch_size] = batch[i][1]
+                tensor[i + j * batch_size] += torch.from_numpy(batch[i][0][j])
+        return tensor, targets
+    elif isinstance(batch[0][0], np.ndarray):
+        arr_shape = batch[0][0].shape
+        if arr_shape[0] == 1:
+            batch_shape = (3, arr_shape[1], arr_shape[2])
+        else:
+            batch_shape = batch[0][0].shape
+        targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+        assert len(targets) == batch_size
+        tensor = torch.zeros((batch_size, *batch_shape), dtype=torch.uint8)
+        for i in range(batch_size):
+            batch_arr = batch[i][0]
+            if arr_shape[0] == 1:
+                batch_arr = np.repeat(batch_arr, 3, axis=0)
+            tensor[i] += torch.from_numpy(batch_arr)
+        return tensor, targets
+    elif isinstance(batch[0][0], torch.Tensor):
+        arr_shape = batch[0][0].shape
+        if arr_shape[0] == 1:
+            batch_shape = (3, arr_shape[1], arr_shape[2])
+        else:
+            batch_shape = batch[0][0].shape
+        targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+        assert len(targets) == batch_size
+        tensor = torch.zeros((batch_size, *batch_shape), dtype=torch.float)
+        for i in range(batch_size):
+            batch_arr = batch[i][0]
+            if arr_shape[0] == 1:
+                batch_arr = batch_arr.repeat_interleave(3, 0)
+            tensor[i].copy_(batch_arr.float())
+        return tensor, targets
+    elif isinstance(batch[0][0], PIL.Image.Image):
+        targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+        assert len(targets) == batch_size
+        b_shape = np.array(batch[0][0].convert('RGB')).shape
+        torch_shape = (b_shape[2], b_shape[0], b_shape[1])
+        tensor = torch.zeros((batch_size, *torch_shape), dtype=torch.uint8)
+        for i in range(batch_size):
+            #            tensor[i] += torch.from_numpy(np.array(batch[i][0]))
+            x = np.array(batch[0][0].convert('RGB'))
+            tensor[i] += torch.from_numpy(np.transpose(x, (2, 0, 1)))
+        return tensor, targets
+
+    else:
+        assert False

@@ -8,7 +8,14 @@ from sklearn.metrics import brier_score_loss
 
 import time
 
+from utils import *
+
 criterion = nn.CrossEntropyLoss()
+
+calibration_list = ['temperature_scaling']
+is_openmax = False
+args = argparser()
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def reliability_diagrams(probs, labels, mode):
@@ -211,11 +218,13 @@ def evaluate_accuracy(data_iter, net, device=None):
     return acc_sum / n
 
 
-def train(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler=None, model_name=None):
+def train(model, train_iter, valid_iter, test_iter, optimizer, num_epochs, device, scheduler=None, model_name=None):
     net = model.to(device)
     print("training on ", device)
     loss = torch.nn.CrossEntropyLoss()
     batch_count = 0
+    best_acc = 0
+    best_count = 0
     for epoch in range(num_epochs):
         train_l_sum, train_acc_sum, n, start = 0.0, 0.0, 0, time.time()
         for X, y in train_iter:
@@ -232,14 +241,48 @@ def train(model, train_iter, test_iter, optimizer, num_epochs, device, scheduler
             batch_count += 1
 
         # save and reload model
-        torch.save(net.state_dict(), './checkpoints/' + model_name + '.pt')
-        net = model.to(device)
-        net.load_state_dict(torch.load('./checkpoints/' + model_name + '.pt'))
+        # torch.save(net.state_dict(), './checkpoints/' + model_name + '.pt')
+        # net = model.to(device)
+        # net.load_state_dict(torch.load('./checkpoints/' + model_name + '.pt'))
 
         test_acc = evaluate_accuracy(test_iter, net)
 
+        if test_acc > best_acc:
+            best_count = 0
+            best_acc = test_acc
+            torch.save(net.state_dict(), './checkpoints/' + model_name + '.pt')
+
+        net = model.to(device)
+        net.load_state_dict(torch.load('./checkpoints/' + model_name + '.pt'))
+
         print('epoch %d, loss %.4f, train acc %.3f, test acc %.3f, time %.1f sec'
               % (epoch + 1, train_l_sum / batch_count, train_acc_sum / n, test_acc, time.time() - start))
+
+        val_logits, val_labels = test(model, valid_iter, device)
+        test_logits, test_labels = test(model, test_iter, device)
+        test_probs = softmax(test_logits, axis=1)
+        reliability_diagrams(test_probs, test_labels, mode='before')
+
+        brier_uncali = evaluate_closed_brier(test_probs, test_labels)
+        print('Brier before calibration {}'.format(brier_uncali))
+        ece_uncalibrated = expected_calibration_error(test_probs, test_labels)
+        print('ECE before calibration: {}'.format(ece_uncalibrated))
+
+        for cali in calibration_list:
+            calibrator = get_calibrator(val_logits, val_labels, mode=cali)
+            confidences = calibrator(test_logits)
+
+            reliability_diagrams(confidences, test_labels, mode=cali)
+
+            brier_cali = evaluate_closed_brier(confidences, test_labels)
+            print('Closed Brier {} {}'.format(cali, brier_cali))
+
+            ece_calibrated = expected_calibration_error(confidences, test_labels)
+            print('ECE {} calibration: {}'.format(cali, ece_calibrated))
+
+        # if test_acc <= best_acc:
+        #     best_count +=1
+        #     if best_count > 2: break
 
 
 def test(model, dataset, device):

@@ -264,28 +264,28 @@ def create_loader(
     if re_split:
         # apply RE to second half of batch if no aug split otherwise line up with aug split
         re_num_splits = num_aug_splits or 2
-    # dataset.transform = create_transform(
-    #     input_size,
-    #     is_training=is_training,
-    #     use_prefetcher=use_prefetcher,
-    #     no_aug=no_aug,
-    #     scale=scale,
-    #     ratio=ratio,
-    #     hflip=hflip,
-    #     vflip=vflip,
-    #     color_jitter=color_jitter,
-    #     auto_augment=auto_augment,
-    #     interpolation=interpolation,
-    #     mean=mean,
-    #     std=std,
-    #     crop_pct=crop_pct,
-    #     tf_preprocessing=tf_preprocessing,
-    #     re_prob=re_prob,
-    #     re_mode=re_mode,
-    #     re_count=re_count,
-    #     re_num_splits=re_num_splits,
-    #     separate=num_aug_splits > 0,
-    # )
+    dataset.transform = create_transform(
+        input_size,
+        is_training=is_training,
+        use_prefetcher=use_prefetcher,
+        no_aug=no_aug,
+        scale=scale,
+        ratio=ratio,
+        hflip=hflip,
+        vflip=vflip,
+        color_jitter=color_jitter,
+        auto_augment=auto_augment,
+        interpolation=interpolation,
+        mean=mean,
+        std=std,
+        crop_pct=crop_pct,
+        tf_preprocessing=tf_preprocessing,
+        re_prob=re_prob,
+        re_mode=re_mode,
+        re_count=re_count,
+        re_num_splits=re_num_splits,
+        separate=num_aug_splits > 0,
+    )
 
     sampler = None
     if distributed and not isinstance(dataset, torch.utils.data.IterableDataset):
