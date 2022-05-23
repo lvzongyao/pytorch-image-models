@@ -20,6 +20,7 @@ python main_partitioned.py --dataset cifar10 --model_type resnet18 --optimizer s
 python main_partitioned.py --dataset svhn --model_type resnet18 --optimizer sgd --num_epoch 60
 python main_partitioned.py --dataset cifar10 --model_type efficientnetv2_s --optimizer sgd --num_epoch 70
 python main_partitioned.py --dataset svhn --model_type efficientnetv2_s --optimizer sgd --num_epoch 80
+python main_partitioned.py --dataset mnist --model_type densenet121 --optimizer sgd --num_epoch 5
 python main_partitioned.py --dataset cifar10 --model_type resnet18 --optimizer sgd --load_model checkpoints/open_resnet18_cifar10_60e.pt
 python main_partitioned.py --dataset svhn --model_type densenet121 --optimizer sgd --load_model checkpoints/open_densenet121_svhn_40e.pt
 
